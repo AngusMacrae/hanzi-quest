@@ -5,10 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hanzi Test</title>
     <link rel="stylesheet" href="css/styles.css" type="text/css">
-    <script src="js/script.js"></script>
+    <link rel="shortcut icon" href="#">
 </head>
 
 <body>
-    
+    <div id="welcome-screen">
+        <h1>Hanzi Test</h1>
+        <p>Welcome to Hanzi Test. Here you can get an accurate and quick estimate of how many Chinese characters you know.</p>
+        <button id="begin-test-button">Begin Test</button>
+    </div>
+    <div id="test-screen">
+        <p>Shown below is a grid of characters. Please click on each one you know to highlight them, then click the View Results button to see your results.</p>
+        <button id="view-results-button">View Results</button>
+    </div>
+    <div id="results-screen">
+        <p>Congratulations, you know <span id="known-char-display"></span> Chinese characters! Keep studying!</p>
+        <button id="repeat-test-button">Repeat Test</button>
+    </div>
+    <script src="js/script.js"></script>
 </body>
 </html>
