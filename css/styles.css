@@ -1,8 +1,6 @@
 /* reset */
 
 * {
-    margin: 0;
-    padding: 0;
     box-sizing: border-box;
 }
 
@@ -15,4 +13,40 @@
 #test-screen,
 #results-screen {
     display: none;
+}
+
+.screen {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+#character-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9em, 1fr));
+/*    grid-auto-rows: 14em;*/
+    grid-gap: 1em;
+    margin: 1em 0;
+}
+
+.testchardiv {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 8em;
+    height: 40px;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.testchar {
+    font-size: 4em;
+}
+
+.checked {
+    transform: scale(0.9);
+    background-color: rgba(20, 20, 20, 5%);
 }
