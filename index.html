@@ -2,34 +2,80 @@
 <html lang="en">
 
 <head>
+
     <meta charset="utf-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Hanzi Test</title>
+
     <link rel="shortcut icon" href="#">
+    
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
-    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+    
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    
     <link rel="stylesheet" href="css/styles.css" type="text/css">
+
 </head>
 
 <body>
-    <div id="welcome-screen" class="screen">
-        <h1>Hanzi Test</h1>
-        <p>Welcome to Hanzi Test. Here you can get an accurate and quick estimate of how many Chinese characters you know.</p>
-        <button id="begin-test-button" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">Begin Test</button>
-    </div>
-    <div id="test-screen" class="screen">
-        <p>Shown below is a grid of characters. Please click on each one you know to highlight them, then click the View Results button to see your results.</p>
-        <section id="character-grid">
 
-        </section>
-        <button id="view-results-button" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">View Results</button>
+    <div class="container-md">
+
+        <header class="">
+
+            <h1>Hanzi Test</h1>
+
+        </header>
+
+        <main>
+
+            <p>Welcome to Hanzi Test! Here you can get an accurate and quick estimate of how many Chinese characters you know.</p>
+
+            <div class="panel" id="welcome-panel">
+
+                <button id="begin-test-button" class="btn btn-primary">Begin Test</button>
+
+            </div>
+
+            <div class="panel" id="test-panel">
+
+                <div id="character"></div>
+
+                <button id="known-button" class="btn btn-primary">Yes</button>
+                <button id="unknown-button" class="btn btn-primary">No</button>
+
+            </div>
+
+            <div class="panel" id="result-panel">
+
+                <p>Congratulations, you know <span id="known-char-display"></span> Chinese characters! Keep studying!</p>
+
+                <button id="repeat-test-button" class="btn btn-primary">Repeat Test</button>
+
+            </div>
+
+
+        </main>
+
+        <footer>
+
+            <p>Angus Macrae 2020</p>
+
+        </footer>
+
     </div>
-    <div id="results-screen" class="screen">
-        <p>Congratulations, you know <span id="known-char-display"></span> Chinese characters! Keep studying!</p>
-        <button id="repeat-test-button" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">Repeat Test</button>
-    </div>
+
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    
+    <script src="js/freqList.js"></script>
     <script src="js/script.js"></script>
+
 </body>
 
 </html>
