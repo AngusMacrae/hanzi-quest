@@ -8,29 +8,71 @@ const welcomePanel = document.getElementById("welcome-panel");
 const testPanel = document.getElementById("test-panel");
 const resultPanel = document.getElementById("result-panel");
 
-// code for generating frequency list array -----------------------
+let result = 5;
+let answersKnown = [];
+let answersFreq = [];
+let character = "";
+let frequency = 0;
+let known = 1;
 
-let freqListArray = [];
-let freqListEntry = {
-    'char': "x",
-    'freq': 0
-};
-
-function toArray(list) {
-    let items = list.getElementsByTagName("li");
-    let character = "";
-    let frequency = 0;
-    for (let i = 0; i < 5000; i++) {
-        //    for (let i = 0; i < items.length; i++) {
-        character = items[i].getElementsByTagName("a")[0].textContent;
-        frequency = +items[i].getElementsByTagName("span")[0].textContent;
-        //        freqListArray.push({char: character, freq: frequency});
-        freqListArray.push(character, frequency);
-    };
-    return freqListArray;
+function updateAnswers(frequency, known) {
+    
+    answersFreq.push(frequency);
+    answersKnown.push(known);
+    
 }
 
-// -----------------------------------------------------------------
+function determineResult() {
+    
+    
+    let lr = linRegression(answersFreq, answersKnown);
+    result = (0.5 - lr.intercept) / lr.slope;
+    
+}
+
+function determineNext(result) {
+    
+    
+    
+}
+
+function displayCharacter(nextCharToDisp) {
+    
+        
+    
+}
+
+function displayResult(result) {
+    
+    
+    
+}
+
+function linRegression(x, y) {
+    
+    let lr = {};
+    let n = y.length;
+    let sum_x = 0;
+    let sum_y = 0;
+    let sum_xy = 0;
+    let sum_xx = 0;
+    let sum_yy = 0;
+    
+    for (let i = 0; i < n; i++) {
+        
+        sum_x += x[i];
+        sum_y += y[i];
+        sum_xy += (x[i] * y[i]);
+        sum_xx += (x[i] * x[i]);
+        sum_yy += (y[i] * y[i]);
+        
+    }
+    
+    lr['slope'] = (n * sum_xy - sum_x * sum_y) / (n * sum_xx - sum_x * sum_x);
+    lr['intercept'] = (sum_y - lr.slope * sum_x) / n;
+    lr['r2'] = Math.pow((n * sum_xy - sum_x*sum_y)/Math.sqrt((n * sum_xx - sum_x * sum_x) * (n * sum_yy - sum_y * sum_y)), 2);
+    
+}
 
 beginTestButton.addEventListener('click', function () {
 
@@ -39,33 +81,27 @@ beginTestButton.addEventListener('click', function () {
 
 });
 
-knownButtonButton.addEventListener('click', function () {
+knownButton.addEventListener('click', function () {
     
-    let answers = [];
-
-    for (let i = charGrid.children.length; i >= 0; i--) {
-        thisChar = charGrid.children[i];
-        if (thisChar.getAttribute("dataChecked") === 1) {
-//            answers.push(thisChar.getAttribute("dataFreq"));
-        }
-    }
-
+    updateAnswers(frequency, 1);
+    determineResult();
+    displayCharacter(determineNext(result));
+    displayResult(result);
+    
 });
 
-knownButtonButton.addEventListener('click', function () {
+unknownButton.addEventListener('click', function () {
+
+    updateAnswers(frequency, 0);
+    determineResult();
+    displayCharacter(determineNext(result));
+    displayResult(result);
     
-    let answers = [];
-
-    for (let i = charGrid.children.length; i >= 0; i--) {
-        thisChar = charGrid.children[i];
-        if (thisChar.getAttribute("dataChecked") === 1) {
-//            answers.push(thisChar.getAttribute("dataFreq"));
-        }
-    }
-
 });
 
 repeatTestButton.addEventListener('click', function () {
+    
     resultPanel.style.display = "none";
     testPanel.style.display = "block";
+    
 });
