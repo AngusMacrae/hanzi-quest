@@ -16,47 +16,30 @@ let answersKnown = [];
 let answersFreq = [];
 
 let character = "";
-let currentCharFreq = 5000;
+let currentCharFreq = 2500;
 let knownUnknown = 1;
-let k = 100;
-let probCorrect = 0.5;
-let numCharsKnown = 200;
+let leap = 5;
+let numCharsKnown = 800;
 let currentCharDiff = 0;
-
-
-function updateAnswers(currentCharFreq, known) {
-    
-//    answered.push(currentCharFreq/2);
-//    freqList[currentCharFreq] = 99999;
-//    answersFreq.push(currentCharFreq/2);
-//    answersKnown.push(known);
-    
-}
-
-function estimateCharsKnown() {
-    
-    currentCharDiff = currentCharFreq;
-    probCorrect = 1 / (1 + Math.E ** (-(numCharsKnown - currentCharDiff)));
-    numCharsKnown += k * (knownUnknown - probCorrect);
-    numCharsKnown = Math.round(numCharsKnown);
-    
-    
-//    let lr = linRegression(answersFreq, answersKnown);
-//    result = (0.5 - lr.intercept) / lr.slope;
-    
-}
+let numAnswers = 0;
 
 function chooseNextChar(numCharsKnown, known) {
     
-    if (knownUnknown == 1) {
-        
-        return numCharsKnown + k;
-        
+    if (known) {
+        leap += 50;
     } else {
-        
-        return numCharsKnown - k;
-        
+        leap -= 50;
     }
+    
+    numAnswers += 1;
+    currentCharDiff = (Math.round(numCharsKnown/2) + leap) * 2;
+    if (currentCharDiff < 1) {
+        currentCharDiff = 2 + (numAnswers * 2);
+    }
+    if (currentCharDiff > 4999) {
+        currentCharDiff = 4998 - (numAnswers * 2);
+    }
+    return currentCharDiff;
     
 }
 
@@ -72,45 +55,11 @@ function displayCharacter(nextCharToDisp) {
 function displayResult() {
     
     resultDisp.innerHTML = "Est. chars known: " + numCharsKnown;
-    console.log("est. num of chars known: " + numCharsKnown);
-    console.log("k: " + k);
-    console.log("current char freq: " + currentCharFreq);
+    console.log("leap size:" + leap);
     console.log("current char diff: " + currentCharDiff);
-    console.log("probability correct: " + probCorrect);
-    
-}
-
-function closest(array, number) {
-    
-    
-    
-}
-
-function linRegression(x, y) {
-    
-    let lr = {};
-    let n = y.length;
-    let sum_x = 0;
-    let sum_y = 0;
-    let sum_xy = 0;
-    let sum_xx = 0;
-    let sum_yy = 0;
-    
-    for (let i = 0; i < n; i++) {
-        
-        sum_x += x[i];
-        sum_y += y[i];
-        sum_xy += (x[i] * y[i]);
-        sum_xx += (x[i] * x[i]);
-        sum_yy += (y[i] * y[i]);
-        
-    }
-    
-    lr['slope'] = (n * sum_xy - sum_x * sum_y) / (n * sum_xx - sum_x * sum_x);
-    lr['intercept'] = (sum_y - lr.slope * sum_x) / n;
-    lr['r2'] = Math.pow((n * sum_xy - sum_x*sum_y)/Math.sqrt((n * sum_xx - sum_x * sum_x) * (n * sum_yy - sum_y * sum_y)), 2);
-    
-    return lr;
+    console.log("num of answers" + numAnswers);
+    console.log("est. num of chars known: " + numCharsKnown);
+    console.log("current char diff: " + currentCharDiff);
     
 }
 
@@ -124,19 +73,15 @@ beginTestButton.addEventListener('click', function () {
 
 knownButton.addEventListener('click', function () {
     
-    updateAnswers(currentCharFreq, 1);
-    knownUnknown = 1;
-    estimateCharsKnown();
+    numCharsKnown = Elo.getNewRating(numCharsKnown, currentCharDiff, 1);
     displayCharacter(chooseNextChar(numCharsKnown, 1));
     displayResult();
     
 });
 
 unknownButton.addEventListener('click', function () {
-
-    updateAnswers(currentCharFreq, 0);
-    knownUnknown = 0;
-    estimateCharsKnown();
+    
+    numCharsKnown = Elo.getNewRating(numCharsKnown, currentCharDiff, 0);
     displayCharacter(chooseNextChar(numCharsKnown, 0));
     displayResult();
     
