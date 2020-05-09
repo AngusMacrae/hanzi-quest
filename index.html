@@ -19,19 +19,19 @@
 
 </head>
 
-<body>
+<body class="container">
 
-    <div class="container-md">
+    <div class="col">
 
         <header class="">
 
-            <h1>Hanzi Test</h1>
+            <h1>Hanzi Quest</h1>
 
         </header>
 
         <main>
 
-            <p>Welcome to Hanzi Test! Here you can get an accurate and quick estimate of how many Chinese characters you know.</p>
+            <p>Welcome to Hanzi Quest! Here you can get an accurate and quick estimate of how many Chinese characters you know.</p>
 
             <div class="panel" id="welcome-panel">
 
@@ -44,10 +44,13 @@
                 <div class="card">
                     <div id="charDisp"></div>
                 </div>
-                <div id="resultDisp"></div>
+                
+                <p>Do you know this character?</p>
 
-                <button id="known-button" class="btn btn-primary">Yes</button>
-                <button id="unknown-button" class="btn btn-primary">No</button>
+                <button id="known-button" class="btn btn-success btn-lg">Yes</button>
+                <button id="unknown-button" class="btn btn-danger btn-lg">No</button>
+                
+                <div class="alert alert-success" id="resultDisp">Estimated number of characters known: ...</div>
 
             </div>
 

@@ -46,7 +46,7 @@ function displayNewCharacter(nextCharToDisp) {
 
 function displayResult(curEstNumKnown, curCharFreq, answersSoFar, wrongAnswersSoFar) {
 
-    resultDisp.innerHTML = "Est. chars known: " + curEstNumKnown;
+    resultDisp.innerHTML = "Estimated number of characters known: " + Math.floor(curEstNumKnown);
     console.log("est. num of chars known: " + curEstNumKnown);
     console.log("current char freq: " + curCharFreq);
     console.log("num of answers" + answersSoFar);
