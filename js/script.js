@@ -10,86 +10,150 @@ const resultPanel = document.getElementById("result-panel");
 const charDisp = document.getElementById("charDisp");
 const resultDisp = document.getElementById("resultDisp");
 
-let result = 5;
-let answered = [];
-let answersKnown = [];
-let answersFreq = [];
-
 let character = "";
-let currentCharFreq = 2500;
-let knownUnknown = 1;
-let leap = 5;
-let numCharsKnown = 800;
-let currentCharDiff = 0;
+let currentCharFreq = 0;
+let newCharFreq = 0;
+let numCharsKnown = 0;
 let numAnswers = 0;
+let numWrongAnswers = 0;
+let placementFreqs = [50, 150, 450, 1350, 4000];
+let isPlacement = true;
 
-function chooseNextChar(numCharsKnown, known) {
+
+function closestEven(number) {
+
+    return Math.floor((number + 1) / 2) * 2;
+
+}
+
+function elo(knownChars, currCharDiff, outcome, answersSoFar) {
     
-    if (known) {
-        leap += 50;
-    } else {
-        leap -= 50;
-    }
+    let chanceOfKnown = 1 / ( 1 + Math.pow(10, (currCharDiff - knownChars) / 400));    
+    let k = Math.max(Math.floor(knownChars/answersSoFar), 32);
     
-    numAnswers += 1;
-    currentCharDiff = (Math.round(numCharsKnown/2) + leap) * 2;
-    if (currentCharDiff < 1) {
-        currentCharDiff = 2 + (numAnswers * 2);
-    }
-    if (currentCharDiff > 4999) {
-        currentCharDiff = 4998 - (numAnswers * 2);
-    }
-    return currentCharDiff;
+    console.log("chance of known: " + chanceOfKnown);
+    console.log("known chars change: " + Math.round(k * (outcome - chanceOfKnown)));
+    return knownChars + Math.round(k * (outcome - chanceOfKnown));
     
 }
 
-function displayCharacter(nextCharToDisp) {
-    
-    currentCharFreq = nextCharToDisp;
-//    character = closest(freqList, currentCharFreq);
-    character = freqList[currentCharFreq];
+function displayNewCharacter(nextCharToDisp) {
+
+    character = freqList[nextCharToDisp];
     charDisp.innerHTML = character;
-    
+
 }
 
-function displayResult() {
-    
-    resultDisp.innerHTML = "Est. chars known: " + numCharsKnown;
-    console.log("leap size:" + leap);
-    console.log("current char diff: " + currentCharDiff);
-    console.log("num of answers" + numAnswers);
-    console.log("est. num of chars known: " + numCharsKnown);
-    console.log("current char diff: " + currentCharDiff);
-    
+function displayResult(curEstNumKnown, curCharFreq, answersSoFar, wrongAnswersSoFar) {
+
+    resultDisp.innerHTML = "Est. chars known: " + curEstNumKnown;
+    console.log("est. num of chars known: " + curEstNumKnown);
+    console.log("current char freq: " + curCharFreq);
+    console.log("num of answers" + answersSoFar);
+    console.log("num wrong answers" + wrongAnswersSoFar);
+
 }
 
 beginTestButton.addEventListener('click', function () {
 
     welcomePanel.style.display = "none";
     testPanel.style.display = "block";
-    displayCharacter(currentCharFreq);
+    currentCharFreq = placementFreqs[0];
+    displayNewCharacter(currentCharFreq);
+    console.log("current char freq: " + currentCharFreq);
+    console.log("num of answers" + numAnswers);
 
 });
 
+function estimateNumCharsKnown(currentCharFreq, currentEstimatedCharsKnown, answersSoFar, answer, placement) {
+
+    let newEstimatedCharsKnown = currentEstimatedCharsKnown;
+
+    if (placement) {
+
+        if (answer) {
+
+            newEstimatedCharsKnown += currentCharFreq / 1.5;
+
+        }
+
+    } else {
+        
+        if (answer) {
+            
+            newEstimatedCharsKnown = elo(currentEstimatedCharsKnown, currentCharFreq, 1, answersSoFar);
+            
+        } else {
+            
+            newEstimatedCharsKnown = elo(currentEstimatedCharsKnown, currentCharFreq, 0, answersSoFar);
+        
+        }
+
+    }
+
+    return newEstimatedCharsKnown;
+
+}
+
+function chooseNextCharacterFreq(answersSoFar, wrongAnswersSoFar, currentEstimatedCharsUnknown, answer, placement) {
+
+    let newCharFreq = 0;
+
+    if (placement) {
+
+        newCharFreq = placementFreqs[((answersSoFar - wrongAnswersSoFar) * 2) - wrongAnswersSoFar];
+
+    } else {
+
+        newCharFreq = closestEven(currentEstimatedCharsUnknown);
+
+    }
+
+    if (newCharFreq < 1) {
+        newCharFreq = 2 + closestEven(answersSoFar);
+    }
+    if (newCharFreq > 4999) {
+        newCharFreq = 4998 - closestEven(answersSoFar);
+    }
+
+    return newCharFreq;
+
+}
+
 knownButton.addEventListener('click', function () {
     
-    numCharsKnown = Elo.getNewRating(numCharsKnown, currentCharDiff, 1);
-    displayCharacter(chooseNextChar(numCharsKnown, 1));
-    displayResult();
+    numAnswers += 1;
+    numCharsKnown = estimateNumCharsKnown(currentCharFreq, numCharsKnown, numAnswers, true, isPlacement);
     
+    if (numWrongAnswers > 1 || ((numAnswers - numWrongAnswers) * 2) - numWrongAnswers > 4) {
+        isPlacement = false;
+    }
+    
+    currentCharFreq = chooseNextCharacterFreq(numAnswers, numWrongAnswers, numCharsKnown, true, isPlacement);
+    displayNewCharacter(currentCharFreq);
+    displayResult(numCharsKnown, currentCharFreq, numAnswers, numWrongAnswers);
+
 });
 
 unknownButton.addEventListener('click', function () {
     
-    numCharsKnown = Elo.getNewRating(numCharsKnown, currentCharDiff, 0);
-    displayCharacter(chooseNextChar(numCharsKnown, 0));
-    displayResult();
+    numAnswers += 1;
+    numWrongAnswers += 1;
+    numCharsKnown = estimateNumCharsKnown(currentCharFreq, numCharsKnown, numAnswers, false, isPlacement);
     
+    if (numWrongAnswers > 1 || ((numAnswers - numWrongAnswers) * 2) - numWrongAnswers > 4) {
+        isPlacement = false;
+    }
+    
+    currentCharFreq = chooseNextCharacterFreq(numAnswers, numWrongAnswers, numCharsKnown, false, isPlacement);
+    displayNewCharacter(currentCharFreq);
+    displayResult(numCharsKnown, currentCharFreq, numAnswers, numWrongAnswers);
+
 });
 
 repeatTestButton.addEventListener('click', function () {
-    
+
     resultPanel.style.display = "none";
     testPanel.style.display = "block";
-    
+
 });
