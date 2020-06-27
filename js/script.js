@@ -32,7 +32,7 @@ const page = {
     this.showCharacter(test.currentCharFreq);
     this.showPanel(2);
   },
-  showFinalTestResult() {
+  showTestResults() {
     $result.textContent = `Congratulations, according to our clever algorithms, you know approximately ${test.estimatedCharsKnown} Chinese characters!`;
     this.showPanel(3);
   },
@@ -42,7 +42,7 @@ const page = {
   showCharacter(nextCharFreq) {
     $character.textContent = freqList[nextCharFreq];
   },
-  showEstimate(estimate) {
+  showProvisionalEstimate(estimate) {
     $estimate.innerHTML = 'Estimated number of characters known: ' + estimate;
   },
 };
@@ -57,27 +57,31 @@ class Test {
     this.isPlacement = true;
   }
   processAnswer(known) {
-    this.updateAnswers(known);
-    this.estimateCharsKnown(known);
-    this.updatePlacementStatus();
-  }
-  updateAnswers(known) {
     this.answers.push({ charFreq: this.currentCharFreq, known: known });
     if (!known) {
       this.wrongCount++;
     }
+    this.estimateCharsKnown(known);
+    this.updatePlacementStatus();
+    // if (this.checkResultAccuracy()) {
+    //   page.showTestResults();
+    // } else {
+    this.getNextCharFreq(known);
+    page.showCharacter(this.currentCharFreq);
+    page.showProvisionalEstimate(Math.round(this.estimatedCharsKnown));
+    this.logState();
+    // }
   }
   estimateCharsKnown(known) {
-    // TODO: refactor to use variable called newEstimate
+    let newEstimate = this.estimatedCharsKnown;
+
     if (this.isPlacement) {
-      this.estimatedCharsKnown += known ? this.currentCharFreq : -this.currentCharFreq;
+      newEstimate += known ? this.currentCharFreq : -this.currentCharFreq;
     } else {
-      this.estimatedCharsKnown = elo(this.estimatedCharsKnown, this.currentCharFreq, Number(known), this.answers.length);
+      newEstimate = elo(newEstimate, this.currentCharFreq, Number(known), this.answers.length);
     }
 
-    if (this.estimatedCharsKnown < 0) {
-      this.estimatedCharsKnown = 0;
-    }
+    this.estimatedCharsKnown = Math.max(newEstimate, 0);
   }
   updatePlacementStatus() {
     // if (this.wrongCount > 1 || (this.answers.length - this.wrongCount) * 2 - this.wrongCount > 4) {
@@ -85,6 +89,23 @@ class Test {
       this.isPlacement = false;
     }
   }
+  // checkResultAccuracy() {
+  //   if (this.answers.length < 20) {
+  //     return false;
+  //   } else {
+  //     let lastTenAnswers = this.answers.slice(-10, this.answers.length - 1);
+  //     let answerFreqSpread = Math.max(...lastTenAnswers) - Math.min(...lastTenAnswers);
+  //     // console.log('answerFreqSpread: ' + answerFreqSpread);
+  //     // console.log('last answer: ' + this.answers[this.answers.length - 1]);
+  //     if (answerFreqSpread < this.answers[this.answers.length - 1] * 0.15) {
+  //       return true;
+  //     } else if (this.answers[this.answers.length - 1] < 1000) {
+  //       return true;
+  //     } else {
+  //       return false;
+  //     }
+  //   }
+  // }
   getNextCharFreq(known) {
     let targetCharFreq;
 
@@ -94,17 +115,11 @@ class Test {
       targetCharFreq = Math.round(this.estimatedCharsKnown);
     }
 
-    this.currentCharFreq = this.findNearestUnseenCharacter(targetCharFreq);
-    return this.currentCharFreq;
+    this.currentCharFreq = this.findNearestUnseenCharFreq(targetCharFreq);
   }
-  findNearestUnseenCharacter(targetCharFreq) {
-    switch (true) {
-      case targetCharFreq < 0:
-        targetCharFreq = 0;
-        break;
-      case targetCharFreq > 4999:
-        targetCharFreq = 4999;
-    }
+  findNearestUnseenCharFreq(targetCharFreq) {
+    targetCharFreq = Math.max(targetCharFreq, 0);
+    targetCharFreq = Math.min(targetCharFreq, 4999);
 
     let answeredCharFreqs = this.answers.map(answer => answer.charFreq);
     let counter = 0;
@@ -121,11 +136,11 @@ class Test {
     return targetCharFreq;
   }
   logState() {
-    console.group('Test state log');
+    console.group('Test state');
     console.log('Answers:');
     console.table(this.answers);
-    console.log('Answer count: ' + this.answers.length);
-    console.log('Incorrect count: ' + this.wrongCount);
+    console.log('Number of answers: ' + this.answers.length);
+    console.log('Incorrect answers: ' + this.wrongCount);
     console.log('Current char frequency: ' + this.currentCharFreq);
     console.log('Current estimate of chars known: ' + this.estimatedCharsKnown);
     console.groupEnd();
@@ -144,21 +159,10 @@ $repeatTestBtn.addEventListener('click', function () {
 
 $yesBtn.addEventListener('click', function () {
   test.processAnswer(true);
-  // TODO: move below code into processAnswer()
-  // if (answerCertain(answeredCharFreqs)) {
-  //   page.showFinalTestResult();
-  // } else {
-  page.showCharacter(test.getNextCharFreq(true));
-  page.showEstimate(Math.round(test.estimatedCharsKnown));
-  test.logState();
-  // }
 });
 
 $noBtn.addEventListener('click', function () {
   test.processAnswer(false);
-  page.showCharacter(test.getNextCharFreq(false));
-  page.showEstimate(Math.round(test.estimatedCharsKnown));
-  test.logState();
 });
 
 function randomOffsets(inputArray, maxOffset) {
@@ -169,26 +173,11 @@ function elo(userRating, charRating, outcome, answerCount) {
   let chanceIsKnown = 1 / (1 + Math.pow(10, (charRating - userRating) / 400));
   let k = 32;
   // let k = Math.round(userRating / answerCount + 30); // adjust k
+  let userRatingChange = Math.round(k * (outcome - chanceIsKnown));
 
-  // console.log('chance of known: ' + chanceIsKnown);
-  // console.log('known chars change: ' + Math.round(k * (outcome - chanceIsKnown)));
-  return userRating + Math.round(k * (outcome - chanceIsKnown));
+  console.group('Elo calculation results');
+  console.log('Chance user knew character: ' + chanceIsKnown);
+  console.log('Change in estimated chars known: ' + userRatingChange);
+  console.groupEnd();
+  return userRating + userRatingChange;
 }
-
-// function answerCertain(answerArray) {
-//   if (answerArray.length < 20) {
-//     return false;
-//   } else {
-//     let lastTenAnswers = answerArray.slice(-10, answerArray.length - 1);
-//     let spread = Math.max(...lastTenAnswers) - Math.min(...lastTenAnswers);
-//     console.log('spread: ' + spread);
-//     console.log('last answer: ' + answerArray[answerArray.length - 1]);
-//     if (spread < answerArray[answerArray.length - 1] * 0.15) {
-//       return true;
-//     } else if (answerArray[answerArray.length - 1] < 1000) {
-//       return true;
-//     } else {
-//       return false;
-//     }
-//   }
-// }
