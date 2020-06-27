@@ -1,88 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hanzi Quest</title>
+    <link rel="shortcut icon" href="#" />
+    <link rel="stylesheet" href="css/styles.css" type="text/css" />
+  </head>
 
-<head>
+  <body>
+    <header>
+      <div class="header-container">
+        <img src="img/hanzi-quest-header.png" />
+        <h1>Hanzi Quest</h1>
+      </div>
+    </header>
 
-    <meta charset="utf-8">
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <main class="transition" data-show-panel="1">
+      <div class="panel" data-panel-num="1" id="welcome-panel">
+        <div class="content-container flow">
+          <p>Welcome to Hanzi Quest!</p>
+          <p>Here you can get an accurate and quick estimate of how many Chinese characters you know.</p>
+          <button id="begin-test-button" class="btn-primary">Begin Test</button>
+        </div>
+      </div>
 
-    <title>Hanzi Test</title>
+      <div class="panel" data-panel-num="2" id="test-panel">
+        <div class="content-container flow">
+          <div id="character"></div>
 
-    <link rel="shortcut icon" href="#">
-    
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-    
-    <link rel="stylesheet" href="css/styles.css" type="text/css">
+          <p>Do you know this character?</p>
 
-</head>
+          <div class="buttons-container">
+            <button id="no-button" class="btn-failure">No</button>
+            <button id="yes-button" class="btn-success">Yes</button>
+          </div>
 
-<body class="container">
+          <div id="estimate">Estimated number of characters known: ...</div>
+        </div>
+      </div>
 
-    <div class="col">
+      <div class="panel" data-panel-num="3" id="result-panel">
+        <div class="content-container flow">
+          <p id="result-message">Congratulations, according to our clever algorithms, you know approximately ... Chinese characters!</p>
+          <button id="repeat-test-button" class="btn-primary">Repeat Test</button>
+          <!-- analysis goes here -->
+        </div>
+      </div>
+    </main>
 
-        <header class="">
-
-            <h1>Hanzi Quest</h1>
-
-        </header>
-
-        <main>
-
-            <p>Welcome to Hanzi Quest! Here you can get an accurate and quick estimate of how many Chinese characters you know.</p>
-
-            <div class="panel" id="welcome-panel">
-
-                <button id="begin-test-button" class="btn btn-primary">Begin Test</button>
-
-            </div>
-
-            <div class="panel" id="test-panel">
-
-                <div class="card">
-                    <div id="charDisp"></div>
-                </div>
-                
-                <p>Do you know this character?</p>
-
-                <button id="known-button" class="btn btn-success btn-lg">Yes</button>
-                <button id="unknown-button" class="btn btn-danger btn-lg">No</button>
-                
-                <div class="alert alert-success" id="resultDisp">Estimated number of characters known: ...</div>
-
-            </div>
-
-            <div class="panel" id="result-panel">
-
-                <p>Congratulations, you know <span id="known-char-display"></span> Chinese characters! Keep studying!</p>
-
-                <button id="repeat-test-button" class="btn btn-primary">Repeat Test</button>
-
-            </div>
-
-
-        </main>
-
-        <footer>
-
-            <p>Angus Macrae 2020</p>
-
-        </footer>
-
-    </div>
-
-    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-    
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
-    
     <script src="js/freqList.js"></script>
-    <script src="js/elo.js"></script>
+    <!-- <script src="js/elo.js"></script> -->
     <script src="js/script.js"></script>
-
-</body>
-
+  </body>
 </html>
