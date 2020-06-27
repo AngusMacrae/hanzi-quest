@@ -49,6 +49,7 @@ const page = {
 
 class Test {
   constructor() {
+    this.answers = [];
     this.answerCount = 0;
     this.wrongCount = 0;
     this.placementFreqs = randomOffsets([50, 150, 450, 1350, 2000], 10);
@@ -57,11 +58,12 @@ class Test {
     this.isPlacement = true;
   }
   processAnswer(known) {
-    this.updateAnswerCounts(known);
+    this.updateAnswers(known);
     this.estimateCharsKnown(known);
     this.updatePlacementStatus();
   }
-  updateAnswerCounts(known) {
+  updateAnswers(known) {
+    this.answers.push({ charFreq: this.currentCharFreq, known: known });
     this.answerCount++;
     if (!known) {
       this.wrongCount++;
@@ -126,6 +128,8 @@ class Test {
   }
   logState() {
     console.group('Test state log');
+    console.log('Answers:');
+    console.table(this.answers);
     console.log('Answer count: ' + this.answerCount);
     console.log('Incorrect count: ' + this.wrongCount);
     console.log('Current char frequency: ' + this.currentCharFreq);
@@ -146,8 +150,6 @@ $repeatTestBtn.addEventListener('click', function () {
 
 $yesBtn.addEventListener('click', function () {
   test.processAnswer(true);
-
-  // answeredChars.push(currentCharFreq);
   // if (answerCertain(answeredChars)) {
   //   page.showFinalTestResult();
   // } else {
