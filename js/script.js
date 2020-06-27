@@ -3,7 +3,6 @@
 // adjust k value in elo function to speed up intial convergence
 // add button for undoing last answer
 // add option to toggle between traditional/simplified characters
-// add uncertainty factor and display results panel when it becomes smaller than threshold value
 // build results panel (grid of HSK chars etc)
 
 const $ = document.querySelector.bind(document);
@@ -99,7 +98,7 @@ class Test {
       let lastAnswerFreq = this.answers[this.answers.length - 1].charFreq;
       console.log('Frequency spread of last 10 answers: ' + recentAnswersFreqSpread);
       console.log('Last answer frequency: ' + lastAnswerFreq);
-      if (recentAnswersFreqSpread < lastAnswerFreq * 0.15) {
+      if (recentAnswersFreqSpread < lastAnswerFreq * 0.1) {
         return true;
       } else if (lastAnswerFreq < 1000) {
         return true;
@@ -173,13 +172,9 @@ function randomNumsInRange(inputArray, offsetProportion) {
 
 function elo(userRating, charRating, outcome, answerCount) {
   let chanceIsKnown = 1 / (1 + Math.pow(10, (charRating - userRating) / 400));
-  let k = 32;
-  // let k = Math.round(userRating / answerCount + 30); // adjust k
+  let k = 32 + Math.round(userRating / answerCount);
   let userRatingChange = Math.round(k * (outcome - chanceIsKnown));
 
-  console.group('Elo calculation results');
-  console.log('Chance user knew character: ' + chanceIsKnown);
   console.log('Change in estimated chars known: ' + userRatingChange);
-  console.groupEnd();
   return userRating + userRatingChange;
 }
