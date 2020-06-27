@@ -51,7 +51,7 @@ class Test {
   constructor() {
     this.answers = [];
     this.wrongCount = 0;
-    this.placementFreqs = randomOffsets([50, 150, 450, 1350, 2000], 10);
+    this.placementFreqs = randomNumsInRange([50, 150, 450, 1350, 2000], 0.2);
     this.currentCharFreq = this.placementFreqs[0];
     this.estimatedCharsKnown = 0;
     this.isPlacement = true;
@@ -167,8 +167,8 @@ $noBtn.addEventListener('click', function () {
   test.processAnswer(false);
 });
 
-function randomOffsets(inputArray, maxOffset) {
-  return inputArray.map(inputNum => inputNum + Math.round(Math.random() * 2 * maxOffset) - maxOffset);
+function randomNumsInRange(inputArray, offsetProportion) {
+  return inputArray.map(inputNum => inputNum + Math.round(Math.random() * 2 * inputNum * offsetProportion) - inputNum * offsetProportion);
 }
 
 function elo(userRating, charRating, outcome, answerCount) {
