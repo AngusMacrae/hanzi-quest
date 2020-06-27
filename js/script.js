@@ -30,6 +30,7 @@ let test = {};
 const page = {
   newTest() {
     test = new Test();
+    console.log(test.placementFreqs);
     this.showCharacter(test.currentCharFreq);
     this.showPanel(2);
   },
@@ -52,7 +53,7 @@ class Test {
   constructor() {
     this.answerCount = 0;
     this.wrongCount = 0;
-    this.placementFreqs = [50 + randomOffset(10), 150 + randomOffset(10), 450 + randomOffset(10), 1350 + randomOffset(10), 2000 + randomOffset(10)];
+    this.placementFreqs = randomOffsets([50, 150, 450, 1350, 2000], 10);
     this.currentCharFreq = this.placementFreqs[0];
     this.estimatedCharsKnown = 0;
     this.isPlacement = true;
@@ -165,8 +166,8 @@ $noBtn.addEventListener('click', function () {
   test.logState();
 });
 
-function randomOffset(maxOffset) {
-  return Math.round(Math.random() * 2 * maxOffset) - maxOffset;
+function randomOffsets(inputArray, maxOffset) {
+  return inputArray.map(inputNum => inputNum + Math.round(Math.random() * 2 * maxOffset) - maxOffset);
 }
 
 function elo(userRating, charRating, outcome, answerCount) {
