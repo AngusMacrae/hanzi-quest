@@ -21,8 +21,6 @@ const $character = $('#character');
 const $estimate = $('#estimate');
 const $result = $('#result-message');
 
-// filter only characters from the array
-freqList = freqList.filter((el, index) => index % 2 == 0);
 // console.log(freqList);
 
 let test = {};
