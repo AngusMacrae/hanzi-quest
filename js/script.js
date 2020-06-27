@@ -50,7 +50,6 @@ const page = {
 class Test {
   constructor() {
     this.answers = [];
-    this.answerCount = 0;
     this.wrongCount = 0;
     this.placementFreqs = randomOffsets([50, 150, 450, 1350, 2000], 10);
     this.currentCharFreq = this.placementFreqs[0];
@@ -64,16 +63,16 @@ class Test {
   }
   updateAnswers(known) {
     this.answers.push({ charFreq: this.currentCharFreq, known: known });
-    this.answerCount++;
     if (!known) {
       this.wrongCount++;
     }
   }
   estimateCharsKnown(known) {
+    // TODO: refactor to use variable called newEstimate
     if (this.isPlacement) {
       this.estimatedCharsKnown += known ? this.currentCharFreq : -this.currentCharFreq;
     } else {
-      this.estimatedCharsKnown = elo(this.estimatedCharsKnown, this.currentCharFreq, Number(known), this.answerCount);
+      this.estimatedCharsKnown = elo(this.estimatedCharsKnown, this.currentCharFreq, Number(known), this.answers.length);
     }
 
     if (this.estimatedCharsKnown < 0) {
@@ -81,56 +80,51 @@ class Test {
     }
   }
   updatePlacementStatus() {
-    // if (this.wrongCount > 1 || (this.answerCount - this.wrongCount) * 2 - this.wrongCount > 4) {
-    if (this.answerCount > 2 || (this.wrongCount && this.answerCount)) {
+    // if (this.wrongCount > 1 || (this.answers.length - this.wrongCount) * 2 - this.wrongCount > 4) {
+    if (this.answers.length > 2 || (this.wrongCount && this.answers.length)) {
       this.isPlacement = false;
     }
   }
   getNextCharFreq(known) {
-    let nextCharFreq;
+    let targetCharFreq;
 
     if (this.isPlacement) {
-      nextCharFreq = this.placementFreqs[(this.answerCount - this.wrongCount) * 2 - this.wrongCount];
+      targetCharFreq = this.placementFreqs[(this.answers.length - this.wrongCount) * 2 - this.wrongCount];
     } else {
-      nextCharFreq = Math.round(this.estimatedCharsKnown);
+      targetCharFreq = Math.round(this.estimatedCharsKnown);
     }
 
-    nextCharFreq = nextCharFreq >= 0 ? nextCharFreq : 0;
-    nextCharFreq = nextCharFreq <= 4999 ? nextCharFreq : 4999;
+    this.currentCharFreq = this.findNearestUnseenCharacter(targetCharFreq);
+    return this.currentCharFreq;
+  }
+  findNearestUnseenCharacter(targetCharFreq) {
+    switch (true) {
+      case targetCharFreq < 0:
+        targetCharFreq = 0;
+        break;
+      case targetCharFreq > 4999:
+        targetCharFreq = 4999;
+    }
 
-    // let counter = 0;
+    let answeredCharFreqs = this.answers.map(answer => answer.charFreq);
+    let counter = 0;
 
-    // if (nextCharFreq < 1) {
-    //   nextCharFreq = 1;
-    //   while (answeredChars.includes(nextCharFreq)) {
-    //     counter += 1;
-    //     nextCharFreq += counter;
-    //   }
-    // } else if (nextCharFreq > 4999) {
-    //   nextCharFreq = 4999;
-    //   while (answeredChars.includes(nextCharFreq)) {
-    //     counter += 1;
-    //     nextCharFreq -= counter;
-    //   }
-    // } else {
-    //   while (answeredChars.includes(nextCharFreq)) {
-    //     if (counter < 0) {
-    //       counter -= 1;
-    //     } else {
-    //       counter += 1;
-    //     }
-    //     counter *= -1;
-    //     nextCharFreq += counter;
-    //   }
-    // }
-    this.currentCharFreq = nextCharFreq;
-    return nextCharFreq;
+    while (true) {
+      if (targetCharFreq >= 0 && targetCharFreq <= 4999 && !answeredCharFreqs.includes(targetCharFreq)) {
+        break;
+      }
+      counter < 0 ? counter-- : counter++;
+      counter *= -1;
+      targetCharFreq += counter;
+    }
+
+    return targetCharFreq;
   }
   logState() {
     console.group('Test state log');
     console.log('Answers:');
     console.table(this.answers);
-    console.log('Answer count: ' + this.answerCount);
+    console.log('Answer count: ' + this.answers.length);
     console.log('Incorrect count: ' + this.wrongCount);
     console.log('Current char frequency: ' + this.currentCharFreq);
     console.log('Current estimate of chars known: ' + this.estimatedCharsKnown);
@@ -150,7 +144,8 @@ $repeatTestBtn.addEventListener('click', function () {
 
 $yesBtn.addEventListener('click', function () {
   test.processAnswer(true);
-  // if (answerCertain(answeredChars)) {
+  // TODO: move below code into processAnswer()
+  // if (answerCertain(answeredCharFreqs)) {
   //   page.showFinalTestResult();
   // } else {
   page.showCharacter(test.getNextCharFreq(true));
