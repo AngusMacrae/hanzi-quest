@@ -63,14 +63,14 @@ class Test {
     }
     this.estimateCharsKnown(known);
     this.updatePlacementStatus();
-    // if (this.checkResultAccuracy()) {
-    //   page.showTestResults();
-    // } else {
-    this.getNextCharFreq(known);
-    page.showCharacter(this.currentCharFreq);
-    page.showProvisionalEstimate(Math.round(this.estimatedCharsKnown));
-    this.logState();
-    // }
+    if (this.checkResultAccuracy()) {
+      page.showTestResults();
+    } else {
+      this.getNextCharFreq(known);
+      page.showCharacter(this.currentCharFreq);
+      page.showProvisionalEstimate(Math.round(this.estimatedCharsKnown));
+      this.logState();
+    }
   }
   estimateCharsKnown(known) {
     let newEstimate = this.estimatedCharsKnown;
@@ -89,23 +89,25 @@ class Test {
       this.isPlacement = false;
     }
   }
-  // checkResultAccuracy() {
-  //   if (this.answers.length < 20) {
-  //     return false;
-  //   } else {
-  //     let lastTenAnswers = this.answers.slice(-10, this.answers.length - 1);
-  //     let answerFreqSpread = Math.max(...lastTenAnswers) - Math.min(...lastTenAnswers);
-  //     // console.log('answerFreqSpread: ' + answerFreqSpread);
-  //     // console.log('last answer: ' + this.answers[this.answers.length - 1]);
-  //     if (answerFreqSpread < this.answers[this.answers.length - 1] * 0.15) {
-  //       return true;
-  //     } else if (this.answers[this.answers.length - 1] < 1000) {
-  //       return true;
-  //     } else {
-  //       return false;
-  //     }
-  //   }
-  // }
+  checkResultAccuracy() {
+    if (this.answers.length < 20) {
+      return false;
+    } else {
+      let recentAnswers = this.answers.slice(-10, this.answers.length - 1);
+      let recentAnswerFreqs = recentAnswers.map(answer => answer.charFreq);
+      let recentAnswersFreqSpread = Math.max(...recentAnswerFreqs) - Math.min(...recentAnswerFreqs);
+      let lastAnswerFreq = this.answers[this.answers.length - 1].charFreq;
+      console.log('Frequency spread of last 10 answers: ' + recentAnswersFreqSpread);
+      console.log('Last answer frequency: ' + lastAnswerFreq);
+      if (recentAnswersFreqSpread < lastAnswerFreq * 0.15) {
+        return true;
+      } else if (lastAnswerFreq < 1000) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+  }
   getNextCharFreq(known) {
     let targetCharFreq;
 
