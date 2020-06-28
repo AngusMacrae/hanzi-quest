@@ -1,6 +1,5 @@
 // TODO:
 // find a better frequency list
-// adjust k value in elo function to speed up intial convergence
 // add button for undoing last answer
 // add option to toggle between traditional/simplified characters
 // build results panel (grid of HSK chars etc)
@@ -27,7 +26,6 @@ let test = {};
 const page = {
   newTest() {
     test = new Test();
-    console.log(test.placementFreqs);
     this.showCharacter(test.currentCharFreq);
     this.showPanel(2);
   },
@@ -46,9 +44,17 @@ const page = {
   },
 };
 
+class Answer {
+  constructor(charFreq, known) {
+    this.charFreq = charFreq;
+    this.known = known;
+  }
+}
+
 class Test {
   constructor() {
     this.answers = [];
+    // TODO: make wrongCount, rightCount, lastAnswerRight and streak methods
     this.wrongCount = 0;
     this.lastAnswerRight = true;
     this.streak = 1;
@@ -70,16 +76,10 @@ class Test {
     }
   }
   updateAnswers(known) {
-    if (this.lastAnswerRight && known) {
-      this.streak++;
-    } else if (!this.lastAnswerRight && !known) {
-      this.streak++;
-    } else {
-      this.streak = 1;
-    }
+    this.lastAnswerRight == known ? this.streak++ : (this.streak = 1);
     this.lastAnswerRight = known;
     if (!known) this.wrongCount++;
-    this.answers.push({ charFreq: this.currentCharFreq, known: known });
+    this.answers.push(new Answer(this.currentCharFreq, known));
   }
   estimateCharsKnown(known) {
     let newEstimate = this.estimatedCharsKnown;
@@ -87,37 +87,32 @@ class Test {
     if (this.isPlacement && known) {
       newEstimate += this.currentCharFreq;
     } else {
-      let multiplier = this.streak;
-      let added = multiplier * getEloRatingChange(newEstimate, this.currentCharFreq, Number(known), this.answers.length);
-      console.log(added);
-      newEstimate += added;
+      newEstimate += this.streak * getEloRatingChange(newEstimate, this.currentCharFreq, Number(known), this.answers.length);
     }
 
     this.estimatedCharsKnown = Math.max(newEstimate, 0);
   }
   updatePlacementStatus() {
-    // if (this.wrongCount > 1 || (this.answers.length - this.wrongCount) * 2 - this.wrongCount > 4) {
-    if (this.answers.length > 2 || (this.wrongCount && this.answers.length)) {
+    if (this.wrongCount > 1 || (this.answers.length - this.wrongCount) * 2 - this.wrongCount > 4) {
+      // if (this.answers.length >= 3 || (this.wrongCount && this.answers.length)) {
       this.isPlacement = false;
     }
   }
   checkResultAccuracy() {
-    if (this.answers.length < 20) {
-      return false;
-    } else {
+    // TODO: move to standalone function
+    if (this.answers.length >= 20) {
+      // TODO: use recent ratings instead of recent answer frequencies
       let recentAnswers = this.answers.slice(-10, this.answers.length - 1);
       let recentAnswerFreqs = recentAnswers.map(answer => answer.charFreq);
       let recentAnswersFreqSpread = Math.max(...recentAnswerFreqs) - Math.min(...recentAnswerFreqs);
       let lastAnswerFreq = this.answers[this.answers.length - 1].charFreq;
+      let passConditions = [recentAnswersFreqSpread < lastAnswerFreq * 0.1, lastAnswerFreq < 500];
       console.log('Frequency spread of last 10 answers: ' + recentAnswersFreqSpread);
       console.log('Last answer frequency: ' + lastAnswerFreq);
-      if (recentAnswersFreqSpread < lastAnswerFreq * 0.1) {
-        return true;
-      } else if (lastAnswerFreq < 500) {
-        return true;
-      } else {
-        return false;
-      }
+      console.log('Pass conditions: ' + passConditions);
+      return passConditions.some(cond => cond == true) ? true : false;
+    } else {
+      return false;
     }
   }
   getNextCharFreq(known) {
@@ -132,6 +127,7 @@ class Test {
     this.currentCharFreq = this.findNearestUnseenCharFreq(targetCharFreq);
   }
   findNearestUnseenCharFreq(targetCharFreq) {
+    // TODO: move to standalone function
     targetCharFreq = Math.max(targetCharFreq, 0);
     targetCharFreq = Math.min(targetCharFreq, 4999);
 
@@ -151,6 +147,7 @@ class Test {
   }
   logState() {
     console.group('Test state');
+    console.log('Placement freqs: ' + this.placementFreqs);
     console.log('Answers:');
     console.table(this.answers);
     console.log('Number of answers: ' + this.answers.length);
@@ -185,12 +182,12 @@ $noBtn.addEventListener('click', function () {
 
 function randomInt(lowerBound, upperBound) {
   let range = upperBound - lowerBound;
-  let randomOffset = Math.round(Math.random() * range);
-  return lowerBound + randomOffset;
+  return lowerBound + Math.floor(Math.random() * (range + 1));
 }
 
 function getEloRatingChange(userRating, charRating, outcome, answerCount) {
   let chanceIsKnown = 1 / (1 + Math.pow(10, (charRating - userRating) / 400));
+  console.log(chanceIsKnown);
   let k = 32 + Math.round((2 * userRating) / answerCount ** 1.5);
   return Math.round(k * (outcome - chanceIsKnown));
 }
