@@ -51,7 +51,8 @@ class Test {
     this.answers = [];
     this.wrongCount = 0;
     // 25-75, 100-200, 300-600, 1000-1700, 1750-2500
-    this.placementFreqs = randomNumsInRange([50, 150, 450, 1350, 3000], 0.35);
+    this.placementFreqs = [randomInt(25, 75), randomInt(100, 200), randomInt(300, 600), randomInt(1000, 1700), randomInt(1750, 2500)];
+    // this.placementFreqs = randomNumsInRange([50, 150, 450, 1350, 3000], 0.35);
     this.currentCharFreq = this.placementFreqs[0];
     this.estimatedCharsKnown = 0;
     this.isPlacement = true;
@@ -167,8 +168,10 @@ $noBtn.addEventListener('click', function () {
   test.processAnswer(false);
 });
 
-function randomNumsInRange(inputArray, offsetProportion) {
-  return inputArray.map(inputNum => inputNum + Math.round(Math.random() * 2 * inputNum * offsetProportion) - inputNum * offsetProportion);
+function randomInt(lowerBound, upperBound) {
+  let range = upperBound - lowerBound;
+  let randomOffset = Math.round(Math.random() * range);
+  return lowerBound + randomOffset;
 }
 
 function elo(userRating, charRating, outcome, answerCount) {
