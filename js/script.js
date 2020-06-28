@@ -50,18 +50,15 @@ class Test {
   constructor() {
     this.answers = [];
     this.wrongCount = 0;
-    // 25-75, 100-200, 300-600, 1000-1700, 1750-2500
+    this.lastAnswerRight = true;
+    this.streak = 1;
     this.placementFreqs = [randomInt(25, 75), randomInt(100, 200), randomInt(300, 600), randomInt(1000, 1700), randomInt(1750, 2500)];
-    // this.placementFreqs = randomNumsInRange([50, 150, 450, 1350, 3000], 0.35);
     this.currentCharFreq = this.placementFreqs[0];
     this.estimatedCharsKnown = 0;
     this.isPlacement = true;
   }
   processAnswer(known) {
-    this.answers.push({ charFreq: this.currentCharFreq, known: known });
-    if (!known) {
-      this.wrongCount++;
-    }
+    this.updateAnswers(known);
     this.estimateCharsKnown(known);
     this.updatePlacementStatus();
     if (this.checkResultAccuracy()) {
@@ -70,8 +67,19 @@ class Test {
       this.getNextCharFreq(known);
       page.showCharacter(this.currentCharFreq);
       page.showProvisionalEstimate(Math.round(this.estimatedCharsKnown));
-      this.logState();
     }
+  }
+  updateAnswers(known) {
+    if (this.lastAnswerRight && known) {
+      this.streak++;
+    } else if (!this.lastAnswerRight && !known) {
+      this.streak++;
+    } else {
+      this.streak = 1;
+    }
+    this.lastAnswerRight = known;
+    if (!known) this.wrongCount++;
+    this.answers.push({ charFreq: this.currentCharFreq, known: known });
   }
   estimateCharsKnown(known) {
     let newEstimate = this.estimatedCharsKnown;
@@ -79,7 +87,10 @@ class Test {
     if (this.isPlacement && known) {
       newEstimate += this.currentCharFreq;
     } else {
-      newEstimate = elo(newEstimate, this.currentCharFreq, Number(known), this.answers.length);
+      let multiplier = this.streak;
+      let added = multiplier * getEloRatingChange(newEstimate, this.currentCharFreq, Number(known), this.answers.length);
+      console.log(added);
+      newEstimate += added;
     }
 
     this.estimatedCharsKnown = Math.max(newEstimate, 0);
@@ -102,7 +113,7 @@ class Test {
       console.log('Last answer frequency: ' + lastAnswerFreq);
       if (recentAnswersFreqSpread < lastAnswerFreq * 0.1) {
         return true;
-      } else if (lastAnswerFreq < 1000) {
+      } else if (lastAnswerFreq < 500) {
         return true;
       } else {
         return false;
@@ -144,6 +155,8 @@ class Test {
     console.table(this.answers);
     console.log('Number of answers: ' + this.answers.length);
     console.log('Incorrect answers: ' + this.wrongCount);
+    console.log('Last answer right: ' + this.lastAnswerRight);
+    console.log('Streak: ' + this.streak);
     console.log('Current char frequency: ' + this.currentCharFreq);
     console.log('Current estimate of chars known: ' + this.estimatedCharsKnown);
     console.groupEnd();
@@ -162,10 +175,12 @@ $repeatTestBtn.addEventListener('click', function () {
 
 $yesBtn.addEventListener('click', function () {
   test.processAnswer(true);
+  test.logState();
 });
 
 $noBtn.addEventListener('click', function () {
   test.processAnswer(false);
+  test.logState();
 });
 
 function randomInt(lowerBound, upperBound) {
@@ -174,11 +189,8 @@ function randomInt(lowerBound, upperBound) {
   return lowerBound + randomOffset;
 }
 
-function elo(userRating, charRating, outcome, answerCount) {
+function getEloRatingChange(userRating, charRating, outcome, answerCount) {
   let chanceIsKnown = 1 / (1 + Math.pow(10, (charRating - userRating) / 400));
-  let k = 32 + Math.round((2 * userRating) / answerCount);
-  let userRatingChange = Math.round(k * (outcome - chanceIsKnown));
-
-  console.log('Change in estimated chars known: ' + userRatingChange);
-  return userRating + userRatingChange;
+  let k = 32 + Math.round((2 * userRating) / answerCount ** 1.5);
+  return Math.round(k * (outcome - chanceIsKnown));
 }
