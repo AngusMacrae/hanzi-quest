@@ -26,7 +26,7 @@ let test = {};
 const page = {
   newTest() {
     test = new Test();
-    this.showCharacter(test.currentCharFreq);
+    this.showCharacter(test.testCharFreq);
     this.showPanel(2);
   },
   showTestResults() {
@@ -54,47 +54,51 @@ class Answer {
 class Test {
   constructor() {
     this.answers = [];
-    // TODO: make wrongCount, rightCount, lastAnswerRight and streak methods
-    this.wrongCount = 0;
-    this.lastAnswerRight = true;
-    this.streak = 1;
     this.placementFreqs = [randomInt(25, 75), randomInt(100, 200), randomInt(300, 600), randomInt(1000, 1700), randomInt(1750, 2500)];
-    this.currentCharFreq = this.placementFreqs[0];
+    this.testCharFreq = this.placementFreqs[0];
     this.estimatedCharsKnown = 0;
     this.isPlacement = true;
   }
+  countKnown() {
+    return this.answers.reduce((count, ans) => (ans.known ? ++count : count), 0);
+  }
+  countUnknown() {
+    return this.answers.reduce((count, ans) => (ans.known ? count : ++count), 0);
+  }
+  streak() {
+    let streak = 1;
+    let i = this.answers.length - 2;
+    while (i >= 0 && this.answers[i].known == this.answers[i + 1].known) {
+      streak++;
+      i--;
+    }
+    return streak;
+  }
   processAnswer(known) {
-    this.updateAnswers(known);
+    this.answers.push(new Answer(this.testCharFreq, known));
     this.estimateCharsKnown(known);
     this.updatePlacementStatus();
     if (this.checkResultAccuracy()) {
       page.showTestResults();
     } else {
       this.getNextCharFreq(known);
-      page.showCharacter(this.currentCharFreq);
+      page.showCharacter(this.testCharFreq);
       page.showProvisionalEstimate(Math.round(this.estimatedCharsKnown));
     }
-  }
-  updateAnswers(known) {
-    this.lastAnswerRight == known ? this.streak++ : (this.streak = 1);
-    this.lastAnswerRight = known;
-    if (!known) this.wrongCount++;
-    this.answers.push(new Answer(this.currentCharFreq, known));
   }
   estimateCharsKnown(known) {
     let newEstimate = this.estimatedCharsKnown;
 
     if (this.isPlacement && known) {
-      newEstimate += this.currentCharFreq;
+      newEstimate += this.testCharFreq;
     } else {
-      newEstimate += this.streak * getEloRatingChange(newEstimate, this.currentCharFreq, Number(known), this.answers.length);
+      newEstimate += this.streak() * getEloRatingChange(newEstimate, this.testCharFreq, Number(known), this.answers.length);
     }
 
     this.estimatedCharsKnown = Math.max(newEstimate, 0);
   }
   updatePlacementStatus() {
-    if (this.wrongCount > 1 || (this.answers.length - this.wrongCount) * 2 - this.wrongCount > 4) {
-      // if (this.answers.length >= 3 || (this.wrongCount && this.answers.length)) {
+    if (this.countUnknown() > 1 || this.countKnown() * 2 - this.countUnknown() > 4) {
       this.isPlacement = false;
     }
   }
@@ -119,12 +123,12 @@ class Test {
     let targetCharFreq;
 
     if (this.isPlacement) {
-      targetCharFreq = this.placementFreqs[(this.answers.length - this.wrongCount) * 2 - this.wrongCount];
+      targetCharFreq = this.placementFreqs[this.countKnown() * 2 - this.countUnknown()];
     } else {
       targetCharFreq = Math.round(this.estimatedCharsKnown);
     }
 
-    this.currentCharFreq = this.findNearestUnseenCharFreq(targetCharFreq);
+    this.testCharFreq = this.findNearestUnseenCharFreq(targetCharFreq);
   }
   findNearestUnseenCharFreq(targetCharFreq) {
     // TODO: move to standalone function
@@ -151,10 +155,9 @@ class Test {
     console.log('Answers:');
     console.table(this.answers);
     console.log('Number of answers: ' + this.answers.length);
-    console.log('Incorrect answers: ' + this.wrongCount);
-    console.log('Last answer right: ' + this.lastAnswerRight);
-    console.log('Streak: ' + this.streak);
-    console.log('Current char frequency: ' + this.currentCharFreq);
+    console.log('Incorrect answers: ' + this.countUnknown());
+    console.log('Streak: ' + this.streak());
+    console.log('Current char frequency: ' + this.testCharFreq);
     console.log('Current estimate of chars known: ' + this.estimatedCharsKnown);
     console.groupEnd();
   }
