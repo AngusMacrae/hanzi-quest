@@ -50,7 +50,8 @@ class Test {
   constructor() {
     this.answers = [];
     this.wrongCount = 0;
-    this.placementFreqs = randomNumsInRange([50, 150, 450, 1350, 2000], 0.2);
+    // 25-75, 100-200, 300-600, 1000-1700, 1750-2500
+    this.placementFreqs = randomNumsInRange([50, 150, 450, 1350, 3000], 0.35);
     this.currentCharFreq = this.placementFreqs[0];
     this.estimatedCharsKnown = 0;
     this.isPlacement = true;
@@ -74,8 +75,8 @@ class Test {
   estimateCharsKnown(known) {
     let newEstimate = this.estimatedCharsKnown;
 
-    if (this.isPlacement) {
-      newEstimate += known ? this.currentCharFreq : -this.currentCharFreq;
+    if (this.isPlacement && known) {
+      newEstimate += this.currentCharFreq;
     } else {
       newEstimate = elo(newEstimate, this.currentCharFreq, Number(known), this.answers.length);
     }
@@ -172,7 +173,7 @@ function randomNumsInRange(inputArray, offsetProportion) {
 
 function elo(userRating, charRating, outcome, answerCount) {
   let chanceIsKnown = 1 / (1 + Math.pow(10, (charRating - userRating) / 400));
-  let k = 32 + Math.round(userRating / answerCount);
+  let k = 32 + Math.round((2 * userRating) / answerCount);
   let userRatingChange = Math.round(k * (outcome - chanceIsKnown));
 
   console.log('Change in estimated chars known: ' + userRatingChange);
