@@ -173,7 +173,7 @@ function randomInt(lowerBound, upperBound) {
 
 function getEloRatingChange(userRating, charRating, outcome, answerCount) {
   let chanceIsKnown = 1 / (1 + Math.pow(10, (charRating - userRating) / 400));
-  let k = 32 + Math.round((2 * userRating) / answerCount ** 1.5);
+  let k = 32 + userRating / answerCount;
   return Math.round(k * (outcome - chanceIsKnown));
 }
 
