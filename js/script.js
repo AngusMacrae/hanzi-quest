@@ -19,7 +19,7 @@ const $character = $('#character');
 const $estimate = $('#estimate');
 const $result = $('#result-message');
 
-// console.log(freqList);
+// console.log(charList);
 
 let test = {};
 
@@ -37,7 +37,7 @@ const page = {
     $main.dataset.showPanel = panelNum;
   },
   showCharacter(nextCharFreq) {
-    $character.textContent = freqList[nextCharFreq];
+    $character.textContent = charList[nextCharFreq];
   },
   showProvisionalEstimate(estimate) {
     $estimate.innerHTML = 'Estimated number of characters known: ' + estimate;
@@ -126,10 +126,10 @@ class Test {
     if (this.isPlacement) {
       this.testCharFreq = this.placementFreqs[this.countKnown() * 2 - this.countUnknown()];
     } else {
-      let targetCharFreq = clamp(this.getCurrentEstimatedCharsKnown(), 0, freqList.length - 1);
+      let targetCharFreq = clamp(this.getCurrentEstimatedCharsKnown(), 0, charList.length - 1);
       this.testCharFreq = findClosestUnseenIndex(
         targetCharFreq,
-        freqList,
+        charList,
         this.answers.map(answer => answer.charFreq)
       );
     }

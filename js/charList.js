@@ -1,4 +1,4 @@
-let freqList = [
+const charList = [
   '的',
   '一',
   '是',
