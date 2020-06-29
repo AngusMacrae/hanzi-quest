@@ -108,14 +108,12 @@ class Test {
   checkResultAccuracy() {
     // TODO: move to standalone function
     if (this.answers.length >= 20) {
-      // TODO: use recent ratings instead of recent answer frequencies
-      let recentAnswers = this.answers.slice(-10, this.answers.length - 1);
-      let recentAnswerFreqs = recentAnswers.map(answer => answer.charFreq);
-      let recentAnswersFreqSpread = Math.max(...recentAnswerFreqs) - Math.min(...recentAnswerFreqs);
-      let lastAnswerFreq = this.answers[this.answers.length - 1].charFreq;
-      let passConditions = [recentAnswersFreqSpread < lastAnswerFreq * 0.1, lastAnswerFreq < 500];
-      console.log('Frequency spread of last 10 answers: ' + recentAnswersFreqSpread);
-      console.log('Last answer frequency: ' + lastAnswerFreq);
+      let recentEstimates = this.estimatedCharsKnown.slice(-11, this.estimatedCharsKnown.length - 1);
+      let spread = Math.max(...recentEstimates) - Math.min(...recentEstimates);
+      let passConditions = [spread < this.getCurrentEstimatedCharsKnown() * 0.1, this.getCurrentEstimatedCharsKnown() < 500];
+      console.log('Last 10 estimates: ' + recentEstimates);
+      console.log('Spread: ' + spread);
+      console.log('Current estimate: ' + this.getCurrentEstimatedCharsKnown());
       console.log('Pass conditions: ' + passConditions);
       return passConditions.some(cond => cond == true) ? true : false;
     } else {
