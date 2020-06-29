@@ -30,7 +30,7 @@ const page = {
     this.showPanel(2);
   },
   showTestResults() {
-    $result.textContent = `Congratulations, according to our clever algorithms, you know approximately ${test.estimatedCharsKnown} Chinese characters!`;
+    $result.textContent = `Congratulations, according to our clever algorithms, you know approximately ${test.getCurrentEstimatedCharsKnown()} Chinese characters!`;
     this.showPanel(3);
   },
   showPanel(panelNum) {
@@ -54,10 +54,13 @@ class Answer {
 class Test {
   constructor() {
     this.answers = [];
+    this.estimatedCharsKnown = [0];
     this.placementFreqs = [randomInt(25, 75), randomInt(100, 200), randomInt(300, 600), randomInt(1000, 1700), randomInt(1750, 2500)];
     this.testCharFreq = this.placementFreqs[0];
-    this.estimatedCharsKnown = 0;
     this.isPlacement = true;
+  }
+  getCurrentEstimatedCharsKnown() {
+    return this.estimatedCharsKnown[this.estimatedCharsKnown.length - 1];
   }
   countKnown() {
     return this.answers.reduce((count, ans) => (ans.known ? ++count : count), 0);
@@ -83,11 +86,11 @@ class Test {
     } else {
       this.setNextCharFreq(known);
       page.showCharacter(this.testCharFreq);
-      page.showProvisionalEstimate(Math.round(this.estimatedCharsKnown));
+      page.showProvisionalEstimate(Math.round(this.getCurrentEstimatedCharsKnown()));
     }
   }
   updateEstimatedCharsKnown(known) {
-    let newEstimate = this.estimatedCharsKnown;
+    let newEstimate = this.getCurrentEstimatedCharsKnown();
 
     if (this.isPlacement) {
       newEstimate += known ? this.testCharFreq : 0;
@@ -95,7 +98,7 @@ class Test {
       newEstimate += this.getStreakLength() * getEloRatingChange(newEstimate, this.testCharFreq, Number(known), this.answers.length);
     }
 
-    this.estimatedCharsKnown = Math.round(Math.max(newEstimate, 0));
+    this.estimatedCharsKnown.push(Math.round(Math.max(newEstimate, 0)));
   }
   updatePlacementStatus() {
     if (this.countUnknown() > 1 || this.countKnown() * 2 - this.countUnknown() > 4) {
@@ -123,7 +126,7 @@ class Test {
     if (this.isPlacement) {
       this.testCharFreq = this.placementFreqs[this.countKnown() * 2 - this.countUnknown()];
     } else {
-      let targetCharFreq = clamp(this.estimatedCharsKnown, 0, freqList.length - 1);
+      let targetCharFreq = clamp(this.getCurrentEstimatedCharsKnown(), 0, freqList.length - 1);
       this.testCharFreq = findClosestUnseenIndex(
         targetCharFreq,
         freqList,
@@ -140,7 +143,7 @@ class Test {
     console.log('Unknown chars: ' + this.countUnknown());
     console.log('Streak: ' + this.getStreakLength());
     console.log('Current char frequency: ' + this.testCharFreq);
-    console.log('Current estimate of chars known: ' + this.estimatedCharsKnown);
+    console.log('Estimates of chars known: ' + this.estimatedCharsKnown);
     console.groupEnd();
   }
 }
