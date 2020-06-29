@@ -24,7 +24,7 @@ const $result = $('#result-message');
 let test = {};
 
 const page = {
-  newTest() {
+  startNewTest() {
     test = new Test();
     this.showCharacter(test.testCharFreq);
     this.showPanel(2);
@@ -81,7 +81,7 @@ class Test {
     if (this.checkResultAccuracy()) {
       page.showTestResults();
     } else {
-      this.getNextCharFreq(known);
+      this.setNextCharFreq(known);
       page.showCharacter(this.testCharFreq);
       page.showProvisionalEstimate(Math.round(this.estimatedCharsKnown));
     }
@@ -95,7 +95,7 @@ class Test {
       newEstimate += this.streak() * getEloRatingChange(newEstimate, this.testCharFreq, Number(known), this.answers.length);
     }
 
-    this.estimatedCharsKnown = Math.max(newEstimate, 0);
+    this.estimatedCharsKnown = Math.round(Math.max(newEstimate, 0));
   }
   updatePlacementStatus() {
     if (this.countUnknown() > 1 || this.countKnown() * 2 - this.countUnknown() > 4) {
@@ -119,35 +119,17 @@ class Test {
       return false;
     }
   }
-  getNextCharFreq(known) {
-    let targetCharFreq;
-
+  setNextCharFreq(known) {
     if (this.isPlacement) {
-      targetCharFreq = this.placementFreqs[this.countKnown() * 2 - this.countUnknown()];
+      this.testCharFreq = this.placementFreqs[this.countKnown() * 2 - this.countUnknown()];
     } else {
-      targetCharFreq = Math.round(this.estimatedCharsKnown);
+      let targetCharFreq = clamp(this.estimatedCharsKnown, 0, freqList.length - 1);
+      this.testCharFreq = findClosestUnseenIndex(
+        targetCharFreq,
+        freqList,
+        this.answers.map(answer => answer.charFreq)
+      );
     }
-
-    this.testCharFreq = this.findNearestUnseenCharFreq(targetCharFreq);
-  }
-  findNearestUnseenCharFreq(targetCharFreq) {
-    // TODO: move to standalone function
-    targetCharFreq = Math.max(targetCharFreq, 0);
-    targetCharFreq = Math.min(targetCharFreq, 4999);
-
-    let answeredCharFreqs = this.answers.map(answer => answer.charFreq);
-    let counter = 0;
-
-    while (true) {
-      if (targetCharFreq >= 0 && targetCharFreq <= 4999 && !answeredCharFreqs.includes(targetCharFreq)) {
-        break;
-      }
-      counter < 0 ? counter-- : counter++;
-      counter *= -1;
-      targetCharFreq += counter;
-    }
-
-    return targetCharFreq;
   }
   logState() {
     console.group('Test state');
@@ -155,7 +137,7 @@ class Test {
     console.log('Answers:');
     console.table(this.answers);
     console.log('Number of answers: ' + this.answers.length);
-    console.log('Incorrect answers: ' + this.countUnknown());
+    console.log('Unknown chars: ' + this.countUnknown());
     console.log('Streak: ' + this.streak());
     console.log('Current char frequency: ' + this.testCharFreq);
     console.log('Current estimate of chars known: ' + this.estimatedCharsKnown);
@@ -164,12 +146,12 @@ class Test {
 }
 
 $beginTestBtn.addEventListener('click', function () {
-  page.newTest();
+  page.startNewTest();
   test.logState();
 });
 
 $repeatTestBtn.addEventListener('click', function () {
-  page.newTest();
+  page.startNewTest();
   test.logState();
 });
 
@@ -190,7 +172,25 @@ function randomInt(lowerBound, upperBound) {
 
 function getEloRatingChange(userRating, charRating, outcome, answerCount) {
   let chanceIsKnown = 1 / (1 + Math.pow(10, (charRating - userRating) / 400));
-  console.log(chanceIsKnown);
   let k = 32 + Math.round((2 * userRating) / answerCount ** 1.5);
   return Math.round(k * (outcome - chanceIsKnown));
+}
+
+function clamp(inputValue, lowerBound, upperBound) {
+  return Math.max(Math.min(inputValue, upperBound), lowerBound);
+}
+
+function findClosestUnseenIndex(targetIndex, targetArray, seenIndices) {
+  let counter = 0;
+
+  while (true) {
+    if (targetIndex >= 0 && targetIndex < targetArray.length && !seenIndices.includes(targetIndex)) {
+      return targetIndex;
+    }
+    counter < 0 ? counter-- : counter++;
+    counter *= -1;
+    targetIndex += counter;
+  }
+
+  return -1;
 }
