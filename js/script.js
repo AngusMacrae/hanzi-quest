@@ -82,9 +82,11 @@ class Test {
       let lastTenEstimates = this.estimatedCharsKnown.slice(-11, this.estimatedCharsKnown.length - 1);
       let average = lastTenEstimates.reduce((sum, num) => sum + num) / 10;
       let sd = standardDeviation(lastTenEstimates);
-      console.log('avg: ' + average);
-      console.log('sd: ' + sd);
-      return sd / average < 0.1 ? true : false;
+      let relativeSD = sd / average;
+      console.log('Average of last 10 estimates: ' + average);
+      console.log('Standard deviation: ' + sd);
+      console.log('Relative SD: ' + relativeSD);
+      return relativeSD < 0.1 && sd < 150 ? true : false;
     } else {
       return false;
     }
