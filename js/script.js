@@ -77,11 +77,25 @@ class Test {
     }
     return streak;
   }
+  resultsConverged() {
+    if (this.answers.length >= 10) {
+      let lastTenEstimates = this.estimatedCharsKnown.slice(-11, this.estimatedCharsKnown.length - 1);
+      let average = lastTenEstimates.reduce((sum, num) => sum + num) / 10;
+      let sd = standardDeviation(lastTenEstimates);
+      let relativeSD = sd / average;
+      console.log('Average of last 10 estimates: ' + average);
+      console.log('Standard deviation: ' + sd);
+      console.log('Relative SD: ' + relativeSD);
+      return relativeSD < 0.1 && sd < 150 ? true : false;
+    } else {
+      return false;
+    }
+  }
   processAnswer(known) {
     this.answers.push(new Answer(this.testCharFreq, known));
     this.updateEstimatedCharsKnown(known);
     this.updatePlacementStatus();
-    if (this.checkResultAccuracy()) {
+    if (this.resultsConverged()) {
       page.showTestResults();
     } else {
       this.setNextCharFreq(known);
@@ -103,21 +117,6 @@ class Test {
   updatePlacementStatus() {
     if (this.countUnknown() > 1 || this.countKnown() * 2 - this.countUnknown() > 4) {
       this.isPlacement = false;
-    }
-  }
-  checkResultAccuracy() {
-    // TODO: move to standalone function
-    if (this.answers.length >= 20) {
-      let recentEstimates = this.estimatedCharsKnown.slice(-11, this.estimatedCharsKnown.length - 1);
-      let spread = Math.max(...recentEstimates) - Math.min(...recentEstimates);
-      let passConditions = [spread < this.getCurrentEstimatedCharsKnown() * 0.1, this.getCurrentEstimatedCharsKnown() < 500];
-      console.log('Last 10 estimates: ' + recentEstimates);
-      console.log('Spread: ' + spread);
-      console.log('Current estimate: ' + this.getCurrentEstimatedCharsKnown());
-      console.log('Pass conditions: ' + passConditions);
-      return passConditions.some(cond => cond == true) ? true : false;
-    } else {
-      return false;
     }
   }
   setNextCharFreq(known) {
@@ -173,7 +172,8 @@ function randomInt(lowerBound, upperBound) {
 
 function getEloRatingChange(userRating, charRating, outcome, answerCount) {
   let chanceIsKnown = 1 / (1 + Math.pow(10, (charRating - userRating) / 400));
-  let k = 32 + userRating / answerCount;
+  // let k = 32 + userRating / answerCount;
+  let k = userRating / answerCount;
   return Math.round(k * (outcome - chanceIsKnown));
 }
 
@@ -194,4 +194,10 @@ function findClosestUnseenIndex(targetIndex, targetArray, seenIndices) {
   }
 
   return -1;
+}
+
+function standardDeviation(array) {
+  let n = array.length;
+  let mean = array.reduce((a, b) => a + b) / n;
+  return Math.sqrt(array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n);
 }
