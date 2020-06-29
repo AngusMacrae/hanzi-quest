@@ -65,10 +65,10 @@ class Test {
   countUnknown() {
     return this.answers.reduce((count, ans) => (ans.known ? count : ++count), 0);
   }
-  streak() {
+  getStreakLength() {
     let streak = 1;
-    let i = this.answers.length - 2;
-    while (i >= 0 && this.answers[i].known == this.answers[i + 1].known) {
+    let i = this.answers.length - 1;
+    while (i > 0 && this.answers[i].known == this.answers[i - 1].known) {
       streak++;
       i--;
     }
@@ -92,7 +92,7 @@ class Test {
     if (this.isPlacement && known) {
       newEstimate += this.testCharFreq;
     } else {
-      newEstimate += this.streak() * getEloRatingChange(newEstimate, this.testCharFreq, Number(known), this.answers.length);
+      newEstimate += this.getStreakLength() * getEloRatingChange(newEstimate, this.testCharFreq, Number(known), this.answers.length);
     }
 
     this.estimatedCharsKnown = Math.round(Math.max(newEstimate, 0));
@@ -138,7 +138,7 @@ class Test {
     console.table(this.answers);
     console.log('Number of answers: ' + this.answers.length);
     console.log('Unknown chars: ' + this.countUnknown());
-    console.log('Streak: ' + this.streak());
+    console.log('Streak: ' + this.getStreakLength());
     console.log('Current char frequency: ' + this.testCharFreq);
     console.log('Current estimate of chars known: ' + this.estimatedCharsKnown);
     console.groupEnd();
