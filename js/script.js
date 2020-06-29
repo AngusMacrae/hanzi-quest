@@ -76,7 +76,7 @@ class Test {
   }
   processAnswer(known) {
     this.answers.push(new Answer(this.testCharFreq, known));
-    this.estimateCharsKnown(known);
+    this.updateEstimatedCharsKnown(known);
     this.updatePlacementStatus();
     if (this.checkResultAccuracy()) {
       page.showTestResults();
@@ -86,11 +86,11 @@ class Test {
       page.showProvisionalEstimate(Math.round(this.estimatedCharsKnown));
     }
   }
-  estimateCharsKnown(known) {
+  updateEstimatedCharsKnown(known) {
     let newEstimate = this.estimatedCharsKnown;
 
-    if (this.isPlacement && known) {
-      newEstimate += this.testCharFreq;
+    if (this.isPlacement) {
+      newEstimate += known ? this.testCharFreq : 0;
     } else {
       newEstimate += this.getStreakLength() * getEloRatingChange(newEstimate, this.testCharFreq, Number(known), this.answers.length);
     }
