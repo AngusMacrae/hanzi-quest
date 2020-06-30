@@ -118,7 +118,7 @@ class Test {
       let sd = standardDeviation(lastTenEstimates);
       let relativeSD = sd / average;
       if (relativeSD < 0.1 && sd < 150) {
-        this.results = new Results(average, sd);
+        this.results = new Results(Math.round(average), Math.round(sd));
       }
     }
   }
