@@ -26,6 +26,22 @@ const page = {
   showTestResults(results) {
     this.showPanel(3);
     $result.textContent = `Congratulations, according to our clever algorithms, you know approximately ${results.charsKnown} Chinese characters!`;
+
+    let chartData = {
+      // A labels array that can contain any sort of values
+      // labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+      // Our series array that contains series objects or in this case series data arrays
+      series: [test.charList.map((char, freq) => getChanceOfKnown(results.charsKnown, freq))],
+      // TODO:
+      //    - sample every 100th character instead of all of them (reduce processing time)
+      //    - label y-axis using percentages
+      //    - add axes titles
+      //    - add chart title
+      //    - improve styling of chart
+      //    - mark user's charsKnown result on the chart
+    };
+
+    new Chartist.Line('#main-chart', chartData);
   },
   showPanel(panelIndex) {
     $main.dataset.showPanel = panelIndex;
