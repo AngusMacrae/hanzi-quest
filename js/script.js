@@ -27,13 +27,16 @@ const page = {
     this.showPanel(3);
     $result.textContent = `Congratulations, according to our clever algorithms, you know approximately ${results.charsKnown} Chinese characters!`;
 
+    let sampleFreqValues = range(0, test.charList.length, 100);
+    let chances = sampleFreqValues.map(freq => getChanceOfKnown(results.charsKnown, freq));
+    let chanceSeries = chances.filter(chance => chance > 0.001 && chance < 0.999);
+
     let chartData = {
       // A labels array that can contain any sort of values
       // labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
       // Our series array that contains series objects or in this case series data arrays
-      series: [test.charList.map((char, freq) => getChanceOfKnown(results.charsKnown, freq))],
+      series: [chanceSeries],
       // TODO:
-      //    - sample every 100th character instead of all of them (reduce processing time)
       //    - label y-axis using percentages
       //    - add axes titles
       //    - add chart title
@@ -225,4 +228,14 @@ function standardDeviation(array) {
   let n = array.length;
   let mean = array.reduce((a, b) => a + b) / n;
   return Math.sqrt(array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n);
+}
+
+function range(lowerBound, upperBound, step = 1) {
+  let returnArray = [],
+    i = 0;
+  do {
+    returnArray.push(lowerBound + i * step);
+    i++;
+  } while (lowerBound + i * step < upperBound);
+  return returnArray;
 }
