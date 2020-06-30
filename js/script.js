@@ -175,10 +175,14 @@ function randomInt(lowerBound, upperBound) {
 }
 
 function getEloRatingChange(userRating, charRating, outcome, answerCount) {
-  let chanceIsKnown = 1 / (1 + Math.pow(10, (charRating - userRating) / 400));
+  let chanceIsKnown = getChanceOfKnown(userRating, charRating);
   // let k = 32 + userRating / answerCount;
   let k = userRating / answerCount;
   return Math.round(k * (outcome - chanceIsKnown));
+}
+
+function getChanceOfKnown(userRating, charRating) {
+  return 1 / (1 + Math.pow(10, (charRating - userRating) / 400));
 }
 
 function clamp(inputValue, lowerBound, upperBound) {
