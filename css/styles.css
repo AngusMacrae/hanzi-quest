@@ -72,6 +72,10 @@ body {
 
 /* layout */
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   overflow-x: hidden;
   display: flex;
