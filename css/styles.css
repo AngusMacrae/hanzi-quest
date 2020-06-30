@@ -179,7 +179,3 @@ button {
 .btn-failure {
   background-color: var(--chinese-red);
 }
-
-#estimate {
-  margin-top: 3em;
-}

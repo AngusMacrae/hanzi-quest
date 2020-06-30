@@ -20,6 +20,7 @@ const page = {
   startNewTest() {
     test = new Test($tradSimpToggle.checked);
     this.showCharacter(test.testCharFreq);
+    $estimate.textContent = '...';
     this.showPanel(2);
   },
   showTestResults() {
@@ -33,7 +34,7 @@ const page = {
     $character.textContent = test.charList[charFreq];
   },
   showLiveEstimate(estimate) {
-    $estimate.innerHTML = 'Estimated number of characters known: ' + estimate;
+    $estimate.textContent = estimate;
   },
 };
 
