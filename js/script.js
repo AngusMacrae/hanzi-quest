@@ -20,12 +20,12 @@ const page = {
   startNewTest() {
     test = new Test($tradSimpToggle.checked);
     this.showCharacter(test.testCharFreq);
-    $estimate.textContent = '...';
     this.showPanel(2);
+    $estimate.textContent = '...';
   },
-  showTestResults() {
-    $result.textContent = `Congratulations, according to our clever algorithms, you know approximately ${test.results.charsKnown} Chinese characters!`;
+  showTestResults(results) {
     this.showPanel(3);
+    $result.textContent = `Congratulations, according to our clever algorithms, you know approximately ${results.charsKnown} Chinese characters!`;
   },
   showPanel(panelIndex) {
     $main.dataset.showPanel = panelIndex;
@@ -89,7 +89,7 @@ class Test {
     this.updatePlacementStatus();
     this.updateResults();
     if (this.results != null) {
-      page.showTestResults();
+      page.showTestResults(this.results);
     } else {
       this.setTestCharFreq(known);
       page.showCharacter(this.testCharFreq);
