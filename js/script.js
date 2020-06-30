@@ -23,7 +23,7 @@ const page = {
     this.showPanel(2);
   },
   showTestResults() {
-    $result.textContent = `Congratulations, according to our clever algorithms, you know approximately ${test.results.average} Chinese characters!`;
+    $result.textContent = `Congratulations, according to our clever algorithms, you know approximately ${test.results.charsKnown} Chinese characters!`;
     this.showPanel(3);
   },
   showPanel(panelIndex) {
