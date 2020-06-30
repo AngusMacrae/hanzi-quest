@@ -5,6 +5,7 @@ const $main = $('main');
 const $welcomePanel = $('#welcome-panel');
 const $testPanel = $('#test-panel');
 const $resultsPanel = $('#results-panel');
+const $tradSimpToggle = $('#trad-simp-toggle');
 const $beginTestBtn = $('#begin-test-button');
 const $repeatTestBtn = $('#repeat-test-button');
 const $yesBtn = $('#yes-button');
@@ -14,11 +15,10 @@ const $estimate = $('#estimate');
 const $result = $('#result-message');
 
 let test;
-let charList = simplifiedCharList;
 
 const page = {
   startNewTest() {
-    test = new Test();
+    test = new Test($tradSimpToggle.checked);
     this.showCharacter(test.testCharFreq);
     this.showPanel(2);
   },
@@ -30,7 +30,7 @@ const page = {
     $main.dataset.showPanel = panelIndex;
   },
   showCharacter(charFreq) {
-    $character.textContent = charList[charFreq];
+    $character.textContent = test.charList[charFreq];
   },
   showLiveEstimate(estimate) {
     $estimate.innerHTML = 'Estimated number of characters known: ' + estimate;
@@ -52,12 +52,13 @@ class Results {
 }
 
 class Test {
-  constructor() {
+  constructor(useTraditionalChars) {
     this.answers = [];
     this.estimates = [0];
     this.placementFreqs = [randomInt(25, 75), randomInt(100, 200), randomInt(300, 600), randomInt(1000, 1700), randomInt(1750, 2500)];
     this.testCharFreq = this.placementFreqs[0];
     this.isPlacement = true;
+    this.charList = useTraditionalChars ? traditionalCharList : simplifiedCharList;
     this.results = null;
   }
   countKnown() {
@@ -125,10 +126,10 @@ class Test {
     if (this.isPlacement) {
       this.testCharFreq = this.placementFreqs[this.countKnown() * 2 - this.countUnknown()];
     } else {
-      let targetCharFreq = clamp(this.getCurrentEstimate(), 0, charList.length - 1);
+      let targetCharFreq = clamp(this.getCurrentEstimate(), 0, this.charList.length - 1);
       this.testCharFreq = findClosestUnseenIndex(
         targetCharFreq,
-        charList,
+        this.charList,
         this.answers.map(answer => answer.charFreq)
       );
     }
@@ -195,6 +196,7 @@ function findClosestUnseenIndex(targetIndex, targetArray, seenIndices) {
     targetIndex += counter;
   }
 
+  // TODO: add check for if all indices have been seen, if yes return -1
   return -1;
 }
 
