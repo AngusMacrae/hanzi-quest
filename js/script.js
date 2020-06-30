@@ -1,9 +1,3 @@
-// TODO:
-// find a better frequency list
-// add button for undoing last answer
-// add option to toggle between traditional/simplified characters
-// build results panel (grid of HSK chars etc)
-
 const $ = document.querySelector.bind(document);
 const $$ = document.querySelectorAll.bind(document);
 
@@ -19,9 +13,7 @@ const $character = $('#character');
 const $estimate = $('#estimate');
 const $result = $('#result-message');
 
-// console.log(charList);
-
-let test = {};
+let test;
 
 const page = {
   startNewTest() {
@@ -33,13 +25,13 @@ const page = {
     $result.textContent = `Congratulations, according to our clever algorithms, you know approximately ${test.results.average} Chinese characters!`;
     this.showPanel(3);
   },
-  showPanel(panelNum) {
-    $main.dataset.showPanel = panelNum;
+  showPanel(panelIndex) {
+    $main.dataset.showPanel = panelIndex;
   },
-  showCharacter(nextCharFreq) {
-    $character.textContent = charList[nextCharFreq];
+  showCharacter(charFreq) {
+    $character.textContent = charList[charFreq];
   },
-  showProvisionalEstimate(estimate) {
+  showLiveEstimate(estimate) {
     $estimate.innerHTML = 'Estimated number of characters known: ' + estimate;
   },
 };
@@ -52,8 +44,8 @@ class Answer {
 }
 
 class Results {
-  constructor(average, standardDev) {
-    this.average = average;
+  constructor(charsKnown, standardDev) {
+    this.charsKnown = charsKnown;
     this.standardDev = standardDev;
   }
 }
@@ -61,14 +53,11 @@ class Results {
 class Test {
   constructor() {
     this.answers = [];
-    this.estimatedCharsKnown = [0];
+    this.estimates = [0];
     this.placementFreqs = [randomInt(25, 75), randomInt(100, 200), randomInt(300, 600), randomInt(1000, 1700), randomInt(1750, 2500)];
     this.testCharFreq = this.placementFreqs[0];
     this.isPlacement = true;
     this.results = null;
-  }
-  getCurrentEstimatedCharsKnown() {
-    return this.estimatedCharsKnown[this.estimatedCharsKnown.length - 1];
   }
   countKnown() {
     return this.answers.reduce((count, ans) => (ans.known ? ++count : count), 0);
@@ -85,8 +74,40 @@ class Test {
     }
     return streak;
   }
+  getCurrentEstimate() {
+    return this.estimates[this.estimates.length - 1];
+  }
   getRecentEstimates(numOfEstimates) {
-    return this.estimatedCharsKnown.slice(-(numOfEstimates + 1), this.estimatedCharsKnown.length - 1);
+    return this.estimates.slice(-(numOfEstimates + 1), this.estimates.length - 1);
+  }
+  processAnswer(known) {
+    this.answers.push(new Answer(this.testCharFreq, known));
+    this.estimate(known);
+    this.updatePlacementStatus();
+    this.updateResults();
+    if (this.results != null) {
+      page.showTestResults();
+    } else {
+      this.setTestCharFreq(known);
+      page.showCharacter(this.testCharFreq);
+      page.showLiveEstimate(Math.round(this.getCurrentEstimate()));
+    }
+  }
+  estimate(known) {
+    let newEstimate = this.getCurrentEstimate();
+
+    if (this.isPlacement) {
+      newEstimate += known ? this.testCharFreq : 0;
+    } else {
+      newEstimate += this.getStreakLength() * getEloRatingChange(newEstimate, this.testCharFreq, Number(known), this.answers.length);
+    }
+
+    this.estimates.push(Math.round(Math.max(newEstimate, 0)));
+  }
+  updatePlacementStatus() {
+    if (this.countUnknown() > 1 || this.countKnown() * 2 - this.countUnknown() > 4) {
+      this.isPlacement = false;
+    }
   }
   updateResults() {
     if (this.answers.length >= 10) {
@@ -99,40 +120,11 @@ class Test {
       }
     }
   }
-  processAnswer(known) {
-    this.answers.push(new Answer(this.testCharFreq, known));
-    this.updateEstimatedCharsKnown(known);
-    this.updatePlacementStatus();
-    this.updateResults();
-    if (this.results != null) {
-      page.showTestResults();
-    } else {
-      this.setNextCharFreq(known);
-      page.showCharacter(this.testCharFreq);
-      page.showProvisionalEstimate(Math.round(this.getCurrentEstimatedCharsKnown()));
-    }
-  }
-  updateEstimatedCharsKnown(known) {
-    let newEstimate = this.getCurrentEstimatedCharsKnown();
-
-    if (this.isPlacement) {
-      newEstimate += known ? this.testCharFreq : 0;
-    } else {
-      newEstimate += this.getStreakLength() * getEloRatingChange(newEstimate, this.testCharFreq, Number(known), this.answers.length);
-    }
-
-    this.estimatedCharsKnown.push(Math.round(Math.max(newEstimate, 0)));
-  }
-  updatePlacementStatus() {
-    if (this.countUnknown() > 1 || this.countKnown() * 2 - this.countUnknown() > 4) {
-      this.isPlacement = false;
-    }
-  }
-  setNextCharFreq(known) {
+  setTestCharFreq(known) {
     if (this.isPlacement) {
       this.testCharFreq = this.placementFreqs[this.countKnown() * 2 - this.countUnknown()];
     } else {
-      let targetCharFreq = clamp(this.getCurrentEstimatedCharsKnown(), 0, charList.length - 1);
+      let targetCharFreq = clamp(this.getCurrentEstimate(), 0, charList.length - 1);
       this.testCharFreq = findClosestUnseenIndex(
         targetCharFreq,
         charList,
@@ -149,29 +141,29 @@ class Test {
     console.log('Unknown chars: ' + this.countUnknown());
     console.log('Streak: ' + this.getStreakLength());
     console.log('Current char frequency: ' + this.testCharFreq);
-    console.log('Estimates of chars known: ' + this.estimatedCharsKnown);
+    console.log('Estimates of chars known: ' + this.estimates);
     console.groupEnd();
   }
 }
 
 $beginTestBtn.addEventListener('click', function () {
   page.startNewTest();
-  test.logState();
+  // test.logState();
 });
 
 $repeatTestBtn.addEventListener('click', function () {
   page.startNewTest();
-  test.logState();
+  // test.logState();
 });
 
 $yesBtn.addEventListener('click', function () {
   test.processAnswer(true);
-  test.logState();
+  // test.logState();
 });
 
 $noBtn.addEventListener('click', function () {
   test.processAnswer(false);
-  test.logState();
+  // test.logState();
 });
 
 function randomInt(lowerBound, upperBound) {
