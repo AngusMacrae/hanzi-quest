@@ -173,7 +173,7 @@ class Test {
     if (this.results != null) {
       page.showTestResults(this.results);
     } else {
-      this.setTestCharFreq(known);
+      this.setTestCharFreq();
       page.showCharacter(this.testCharFreq);
       page.showLiveEstimate(Math.round(this.getCurrentEstimate()));
     }
@@ -190,22 +190,23 @@ class Test {
     this.estimates.push(Math.round(Math.max(newEstimate, 0)));
   }
   updatePlacementStatus() {
-    if (this.countUnknown() > 1 || this.countKnown() * 2 - this.countUnknown() > 4) {
+    if (this.countUnknown() > 1 || this.countKnown() * 2 - this.countUnknown() > 4 || this.countUnknown() > this.countKnown()) {
       this.isPlacement = false;
     }
   }
   updateResults() {
+    // TODO: consider only non-placement estimates here
     if (this.answers.length >= 10) {
       let lastTenEstimates = this.getRecentEstimates(10);
-      let average = lastTenEstimates.reduce((sum, num) => sum + num) / 10;
+      let recentAverage = lastTenEstimates.reduce((sum, num) => sum + num) / 10;
       let sd = standardDeviation(lastTenEstimates);
-      let relativeSD = sd / average;
-      if (relativeSD < 0.1 && sd < 150) {
-        this.results = new Results(Math.round(average), Math.round(sd));
+      let relativeSD = sd / recentAverage;
+      if ((relativeSD < 0.1 && sd < 150) || sd < 2) {
+        this.results = new Results(Math.max(Math.round(recentAverage), this.countKnown()), Math.round(sd));
       }
     }
   }
-  setTestCharFreq(known) {
+  setTestCharFreq() {
     if (this.isPlacement) {
       this.testCharFreq = this.placementFreqs[this.countKnown() * 2 - this.countUnknown()];
     } else {
@@ -259,7 +260,7 @@ function randomInt(lowerBound, upperBound) {
 function getEloRatingChange(userRating, charRating, outcome, answerCount) {
   let chanceIsKnown = getChanceOfKnown(userRating, charRating);
   // let k = 32 + userRating / answerCount;
-  let k = userRating / answerCount;
+  let k = 2 + userRating / answerCount;
   return Math.round(k * (outcome - chanceIsKnown));
 }
 
