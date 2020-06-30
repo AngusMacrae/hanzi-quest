@@ -179,3 +179,11 @@ button {
 .btn-failure {
   background-color: var(--chinese-red);
 }
+
+.ct-chart .ct-label.ct-horizontal.ct-end {
+  transform: translate(-15px, 5px);
+}
+
+.ct-chart .ct-label.ct-vertical.ct-start {
+  transform: translateY(6px);
+}

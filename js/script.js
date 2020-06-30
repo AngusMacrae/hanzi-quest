@@ -26,25 +26,7 @@ const page = {
   showTestResults(results) {
     this.showPanel(3);
     $result.textContent = `Congratulations, according to our clever algorithms, you know approximately ${results.charsKnown} Chinese characters!`;
-
-    let sampleFreqValues = range(0, test.charList.length, 100);
-    let chances = sampleFreqValues.map(freq => getChanceOfKnown(results.charsKnown, freq));
-    let chanceSeries = chances.filter(chance => chance > 0.001 && chance < 0.999);
-
-    let chartData = {
-      // A labels array that can contain any sort of values
-      // labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-      // Our series array that contains series objects or in this case series data arrays
-      series: [chanceSeries],
-      // TODO:
-      //    - label y-axis using percentages
-      //    - add axes titles
-      //    - add chart title
-      //    - improve styling of chart
-      //    - mark user's charsKnown result on the chart
-    };
-
-    new Chartist.Line('#main-chart', chartData);
+    this.showChart(results);
   },
   showPanel(panelIndex) {
     $main.dataset.showPanel = panelIndex;
@@ -54,6 +36,87 @@ const page = {
   },
   showLiveEstimate(estimate) {
     $estimate.textContent = estimate;
+  },
+  showChart(results) {
+    let sampleFreqValues = range(0, test.charList.length, 100);
+    let chances = sampleFreqValues.map(freq => getChanceOfKnown(results.charsKnown, freq));
+    let chancePoints = chances.map((chance, index) => ({ x: sampleFreqValues[index], y: chance }));
+    let chancePointsFiltered = chancePoints.filter(point => point.y > 0.001 && point.y < 0.999);
+
+    let chartData = {
+      labels: [...chancePointsFiltered.map(point => point.x)],
+      series: [chancePointsFiltered, [{ x: results.charsKnown, y: 0.5 }]],
+      // TODO:
+      //    - add chart title
+      //    - mark user's charsKnown result on the chart
+    };
+
+    let mainChart = new Chartist.Line('#main-chart', chartData, {
+      low: 0,
+      high: 1,
+      chartPadding: {
+        top: 10,
+        right: 10,
+        bottom: 30,
+        left: 20,
+      },
+      showArea: true,
+      showPoint: false,
+      showLine: false,
+      fullWidth: true,
+      axisX: {
+        // showGrid: false,
+        labelInterpolationFnc: function (value, index, labels) {
+          if (index % 2 == 0 || index == labels.length - 1) {
+            return null;
+          } else {
+            return value;
+          }
+        },
+      },
+      axisY: {
+        labelInterpolationFnc: function (value) {
+          return Math.round(value * 100) + '%';
+        },
+      },
+      plugins: [
+        Chartist.plugins.ctAxisTitle({
+          axisX: {
+            axisTitle: 'Character frequency',
+            axisClass: 'ct-axis-title',
+            offset: {
+              x: 0,
+              y: 50,
+            },
+            textAnchor: 'middle',
+          },
+          axisY: {
+            axisTitle: 'Chances character is known',
+            axisClass: 'ct-axis-title',
+            offset: {
+              x: -25,
+              y: 0,
+            },
+            textAnchor: 'middle',
+            flipTitle: false,
+          },
+        }),
+      ],
+    });
+
+    mainChart.on('draw', function (data) {
+      if (data.type === 'line' || data.type === 'area') {
+        data.element.animate({
+          d: {
+            begin: 2000 * data.index,
+            dur: 2000,
+            from: data.path.clone().scale(1, 0).translate(0, data.chartRect.height()).stringify(),
+            to: data.path.clone().stringify(),
+            easing: Chartist.Svg.Easing.easeOutQuint,
+          },
+        });
+      }
+    });
   },
 };
 
