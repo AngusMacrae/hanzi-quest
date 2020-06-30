@@ -14,6 +14,7 @@ const $estimate = $('#estimate');
 const $result = $('#result-message');
 
 let test;
+let charList = simplifiedCharList;
 
 const page = {
   startNewTest() {
