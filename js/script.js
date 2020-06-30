@@ -30,7 +30,7 @@ const page = {
     this.showPanel(2);
   },
   showTestResults() {
-    $result.textContent = `Congratulations, according to our clever algorithms, you know approximately ${test.getCurrentEstimatedCharsKnown()} Chinese characters!`;
+    $result.textContent = `Congratulations, according to our clever algorithms, you know approximately ${test.results.average} Chinese characters!`;
     this.showPanel(3);
   },
   showPanel(panelNum) {
@@ -51,6 +51,13 @@ class Answer {
   }
 }
 
+class Results {
+  constructor(average, standardDev) {
+    this.average = average;
+    this.standardDev = standardDev;
+  }
+}
+
 class Test {
   constructor() {
     this.answers = [];
@@ -58,6 +65,7 @@ class Test {
     this.placementFreqs = [randomInt(25, 75), randomInt(100, 200), randomInt(300, 600), randomInt(1000, 1700), randomInt(1750, 2500)];
     this.testCharFreq = this.placementFreqs[0];
     this.isPlacement = true;
+    this.results = null;
   }
   getCurrentEstimatedCharsKnown() {
     return this.estimatedCharsKnown[this.estimatedCharsKnown.length - 1];
@@ -77,25 +85,26 @@ class Test {
     }
     return streak;
   }
-  resultsConverged() {
+  getRecentEstimates(numOfEstimates) {
+    return this.estimatedCharsKnown.slice(-(numOfEstimates + 1), this.estimatedCharsKnown.length - 1);
+  }
+  updateResults() {
     if (this.answers.length >= 10) {
-      let lastTenEstimates = this.estimatedCharsKnown.slice(-11, this.estimatedCharsKnown.length - 1);
+      let lastTenEstimates = this.getRecentEstimates(10);
       let average = lastTenEstimates.reduce((sum, num) => sum + num) / 10;
       let sd = standardDeviation(lastTenEstimates);
       let relativeSD = sd / average;
-      console.log('Average of last 10 estimates: ' + average);
-      console.log('Standard deviation: ' + sd);
-      console.log('Relative SD: ' + relativeSD);
-      return relativeSD < 0.1 && sd < 150 ? true : false;
-    } else {
-      return false;
+      if (relativeSD < 0.1 && sd < 150) {
+        this.results = new Results(average, sd);
+      }
     }
   }
   processAnswer(known) {
     this.answers.push(new Answer(this.testCharFreq, known));
     this.updateEstimatedCharsKnown(known);
     this.updatePlacementStatus();
-    if (this.resultsConverged()) {
+    this.updateResults();
+    if (this.results != null) {
       page.showTestResults();
     } else {
       this.setNextCharFreq(known);
