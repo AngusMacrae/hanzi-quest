@@ -41,81 +41,78 @@ const page = {
     let sampleFreqValues = range(0, test.charList.length, 100);
     let chances = sampleFreqValues.map(freq => getChanceOfKnown(results.charsKnown, freq));
     let chancePoints = chances.map((chance, index) => ({ x: sampleFreqValues[index], y: chance }));
-    let chancePointsFiltered = chancePoints.filter(point => point.y > 0.001 && point.y < 0.999);
+    let chancePointsFiltered = chancePoints.filter(point => point.y > 0.001);
+    console.log(chancePointsFiltered);
+    let calculatedScore = chancePointsFiltered.reduce((acc, point) => (acc += point.y), 0);
+    console.log(calculatedScore * 100);
+    // let chancePointsFiltered = chancePoints.filter(point => point.y > 0.001 && point.y < 0.999);
 
-    let chartData = {
-      labels: [...chancePointsFiltered.map(point => point.x)],
-      series: [chancePointsFiltered, [{ x: results.charsKnown, y: 0.5 }]],
-      // TODO:
-      //    - add chart title
-      //    - mark user's charsKnown result on the chart
-    };
+    // let labels = [...chancePointsFiltered.map(point => point.x)];
 
-    let mainChart = new Chartist.Line('#main-chart', chartData, {
-      low: 0,
-      high: 1,
-      chartPadding: {
-        top: 10,
-        right: 10,
-        bottom: 30,
-        left: 20,
+    let ctx = document.getElementById('main-chart').getContext('2d');
+    let mainChart = new Chart(ctx, {
+      type: 'scatter',
+      data: {
+        datasets: [
+          {
+            label: 'Chance is known curve',
+            data: chancePointsFiltered,
+            pointRadius: 0,
+            // showLine: false,
+            // fill: true,
+            backgroundColor: 'rgba(170,56,30,0.2)',
+            borderColor: 'rgba(170,56,30,0.2)',
+          },
+          {
+            label: 'Estimated number of characters known',
+            data: [
+              {
+                x: results.charsKnown,
+                y: 0.5,
+              },
+            ],
+            pointBorderColor: 'rgb(170,56,30)',
+            pointBackgroundColor: 'rgb(170,56,30)',
+          },
+        ],
       },
-      showArea: true,
-      showPoint: false,
-      showLine: false,
-      fullWidth: true,
-      axisX: {
-        // showGrid: false,
-        labelInterpolationFnc: function (value, index, labels) {
-          if (index % 2 == 0 || index == labels.length - 1) {
-            return null;
-          } else {
-            return value;
-          }
+      options: {
+        showLines: true,
+        title: {
+          display: true,
+          text: 'Estimated chances of character being known vs frequency rank',
+        },
+        legend: { display: false },
+        tooltips: { enabled: false },
+        hover: { mode: null },
+        scales: {
+          xAxes: [
+            {
+              type: 'linear',
+              position: 'bottom',
+              scaleLabel: {
+                display: true,
+                labelString: 'Characer frequency rank',
+              },
+            },
+          ],
+          yAxes: [
+            {
+              ticks: {
+                min: 0,
+                max: this.max,
+                callback: function (value) {
+                  return ((value / this.max) * 100).toFixed(0) + '%'; // convert to percentage
+                },
+              },
+              scaleLabel: {
+                display: true,
+                labelString: 'Chance character is known',
+              },
+            },
+          ],
         },
       },
-      axisY: {
-        labelInterpolationFnc: function (value) {
-          return Math.round(value * 100) + '%';
-        },
-      },
-      plugins: [
-        Chartist.plugins.ctAxisTitle({
-          axisX: {
-            axisTitle: 'Character frequency',
-            axisClass: 'ct-axis-title',
-            offset: {
-              x: 0,
-              y: 50,
-            },
-            textAnchor: 'middle',
-          },
-          axisY: {
-            axisTitle: 'Chances character is known',
-            axisClass: 'ct-axis-title',
-            offset: {
-              x: -25,
-              y: 0,
-            },
-            textAnchor: 'middle',
-            flipTitle: false,
-          },
-        }),
-      ],
-    });
-
-    mainChart.on('draw', function (data) {
-      if (data.type === 'line' || data.type === 'area') {
-        data.element.animate({
-          d: {
-            begin: 2000 * data.index,
-            dur: 2000,
-            from: data.path.clone().scale(1, 0).translate(0, data.chartRect.height()).stringify(),
-            to: data.path.clone().stringify(),
-            easing: Chartist.Svg.Easing.easeOutQuint,
-          },
-        });
-      }
     });
   },
 };

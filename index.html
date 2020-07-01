@@ -6,9 +6,6 @@
     <title>Hanzi Quest</title>
     <link rel="shortcut icon" href="#" />
     <link rel="stylesheet" href="css/styles.css" type="text/css" />
-    <link rel="stylesheet" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css" />
-    <script src="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
-    <script src="js/chartist-title-plugin.js"></script>
   </head>
 
   <body>
@@ -49,11 +46,14 @@
         <div class="content-container flow">
           <p id="result-message">Congratulations, according to our clever algorithms, you know approximately ... Chinese characters!</p>
           <button id="repeat-test-button" class="btn-primary">Repeat Test</button>
-          <div class="ct-chart ct-perfect-fifth" id="main-chart"></div>
+          <div class="chart-container">
+            <canvas id="main-chart"></canvas>
+          </div>
         </div>
       </div>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
     <script src="js/charLists.js"></script>
     <script src="js/script.js"></script>
   </body>
