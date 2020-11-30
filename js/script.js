@@ -39,7 +39,7 @@ const page = {
   },
   showChart(results) {
     let sampleFreqValues = range(0, test.charList.length, 100);
-    let chances = sampleFreqValues.map(freq => getChanceOfKnown(results.charsKnown, freq));
+    let chances = sampleFreqValues.map(freq => getChanceIsKnown(results.charsKnown, freq));
     let chancePoints = chances.map((chance, index) => ({ x: sampleFreqValues[index], y: chance }));
     let chancePointsFiltered = chancePoints.filter(point => point.y > 0.001);
     console.log(chancePointsFiltered);
@@ -118,9 +118,9 @@ const page = {
 };
 
 class Answer {
-  constructor(charFreq, known) {
+  constructor(charFreq, isKnown) {
     this.charFreq = charFreq;
-    this.known = known;
+    this.isKnown = isKnown;
   }
 }
 
@@ -142,15 +142,15 @@ class Test {
     this.results = null;
   }
   get knownCount() {
-    return this.answers.reduce((count, ans) => (ans.known ? ++count : count), 0);
+    return this.answers.reduce((count, ans) => (ans.isKnown ? ++count : count), 0);
   }
   get unknownCount() {
-    return this.answers.reduce((count, ans) => (ans.known ? count : ++count), 0);
+    return this.answers.reduce((count, ans) => (ans.isKnown ? count : ++count), 0);
   }
   get streakLength() {
     let streak = 1;
     let i = this.answers.length - 1;
-    while (i > 0 && this.answers[i].known == this.answers[i - 1].known) {
+    while (i > 0 && this.answers[i].isKnown == this.answers[i - 1].isKnown) {
       streak++;
       i--;
     }
@@ -159,12 +159,12 @@ class Test {
   get currentEstimate() {
     return this.estimates[this.estimates.length - 1];
   }
-  getRecentEstimates(numOfEstimates) {
+  recentEstimates(numOfEstimates) {
     return this.estimates.slice(-(numOfEstimates + 1), this.estimates.length - 1);
   }
-  processAnswer(known) {
-    this.answers.push(new Answer(this.testCharFreq, known));
-    this.estimate(known);
+  processAnswer(isKnown) {
+    this.answers.push(new Answer(this.testCharFreq, isKnown));
+    this.newEstimate(isKnown);
     this.updatePlacementStatus();
     this.updateResults();
     if (this.results != null) {
@@ -175,13 +175,13 @@ class Test {
       page.showLiveEstimate(Math.round(this.currentEstimate));
     }
   }
-  estimate(known) {
+  newEstimate(isKnown) {
     let newEstimate = this.currentEstimate;
 
     if (this.isPlacement) {
-      newEstimate += known ? this.testCharFreq : 0;
+      newEstimate += isKnown ? this.testCharFreq : 0;
     } else {
-      newEstimate += this.streakLength * getEloRatingChange(newEstimate, this.testCharFreq, Number(known), this.answers.length);
+      newEstimate += this.streakLength * getEloRatingChange(newEstimate, this.testCharFreq, Number(isKnown), this.answers.length);
     }
 
     this.estimates.push(Math.round(Math.max(newEstimate, 0)));
@@ -194,7 +194,7 @@ class Test {
   updateResults() {
     // TODO: consider only non-placement estimates here
     if (this.answers.length >= 10) {
-      let lastTenEstimates = this.getRecentEstimates(10);
+      let lastTenEstimates = this.recentEstimates(10);
       let recentAverage = lastTenEstimates.reduce((sum, num) => sum + num) / 10;
       let sd = standardDeviation(lastTenEstimates);
       let relativeSD = sd / recentAverage;
@@ -255,13 +255,13 @@ function randomInt(lowerBound, upperBound) {
 }
 
 function getEloRatingChange(userRating, charRating, outcome, answerCount) {
-  let chanceIsKnown = getChanceOfKnown(userRating, charRating);
+  let chanceIsKnown = getChanceIsKnown(userRating, charRating);
   // let k = 32 + userRating / answerCount;
   let k = 2 + userRating / answerCount;
   return Math.round(k * (outcome - chanceIsKnown));
 }
 
-function getChanceOfKnown(userRating, charRating) {
+function getChanceIsKnown(userRating, charRating) {
   return 1 / (1 + Math.pow(10, (charRating - userRating) / 400));
 }
 
