@@ -141,13 +141,13 @@ class Test {
     this.charList = useTraditionalChars ? traditionalCharList : simplifiedCharList;
     this.results = null;
   }
-  countKnown() {
+  get knownCount() {
     return this.answers.reduce((count, ans) => (ans.known ? ++count : count), 0);
   }
-  countUnknown() {
+  get unknownCount() {
     return this.answers.reduce((count, ans) => (ans.known ? count : ++count), 0);
   }
-  getStreakLength() {
+  get streakLength() {
     let streak = 1;
     let i = this.answers.length - 1;
     while (i > 0 && this.answers[i].known == this.answers[i - 1].known) {
@@ -156,7 +156,7 @@ class Test {
     }
     return streak;
   }
-  getCurrentEstimate() {
+  get currentEstimate() {
     return this.estimates[this.estimates.length - 1];
   }
   getRecentEstimates(numOfEstimates) {
@@ -172,22 +172,22 @@ class Test {
     } else {
       this.setTestCharFreq();
       page.showCharacter(this.testCharFreq);
-      page.showLiveEstimate(Math.round(this.getCurrentEstimate()));
+      page.showLiveEstimate(Math.round(this.currentEstimate));
     }
   }
   estimate(known) {
-    let newEstimate = this.getCurrentEstimate();
+    let newEstimate = this.currentEstimate;
 
     if (this.isPlacement) {
       newEstimate += known ? this.testCharFreq : 0;
     } else {
-      newEstimate += this.getStreakLength() * getEloRatingChange(newEstimate, this.testCharFreq, Number(known), this.answers.length);
+      newEstimate += this.streakLength * getEloRatingChange(newEstimate, this.testCharFreq, Number(known), this.answers.length);
     }
 
     this.estimates.push(Math.round(Math.max(newEstimate, 0)));
   }
   updatePlacementStatus() {
-    if (this.countUnknown() > 1 || this.countKnown() * 2 - this.countUnknown() > 4 || this.countUnknown() > this.countKnown()) {
+    if (this.unknownCount > 1 || this.knownCount * 2 - this.unknownCount > 4 || this.unknownCount > this.knownCount) {
       this.isPlacement = false;
     }
   }
@@ -199,15 +199,15 @@ class Test {
       let sd = standardDeviation(lastTenEstimates);
       let relativeSD = sd / recentAverage;
       if ((relativeSD < 0.1 && sd < 150) || sd < 2) {
-        this.results = new Results(Math.max(Math.round(recentAverage), this.countKnown()), Math.round(sd));
+        this.results = new Results(Math.max(Math.round(recentAverage), this.knownCount), Math.round(sd));
       }
     }
   }
   setTestCharFreq() {
     if (this.isPlacement) {
-      this.testCharFreq = this.placementFreqs[this.countKnown() * 2 - this.countUnknown()];
+      this.testCharFreq = this.placementFreqs[this.knownCount * 2 - this.unknownCount];
     } else {
-      let targetCharFreq = clamp(this.getCurrentEstimate(), 0, this.charList.length - 1);
+      let targetCharFreq = clamp(this.currentEstimate, 0, this.charList.length - 1);
       this.testCharFreq = findClosestUnseenIndex(
         targetCharFreq,
         this.charList,
@@ -221,8 +221,8 @@ class Test {
     console.log('Answers:');
     console.table(this.answers);
     console.log('Number of answers: ' + this.answers.length);
-    console.log('Unknown chars: ' + this.countUnknown());
-    console.log('Streak: ' + this.getStreakLength());
+    console.log('Unknown chars: ' + this.unknownCount);
+    console.log('Streak: ' + this.streakLength);
     console.log('Current char frequency: ' + this.testCharFreq);
     console.log('Estimates of chars known: ' + this.estimates);
     console.groupEnd();
