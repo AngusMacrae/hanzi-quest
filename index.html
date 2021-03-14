@@ -3,13 +3,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="author" content="Angus Macrae">
+    <meta name="author" content="Angus Macrae" />
     <title>Hanzi Quest</title>
     <link rel="shortcut icon" href="#" />
     <link rel="stylesheet" href="css/styles.css" type="text/css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0" defer></script>
-    <script src="js/charLists.js" defer></script>
-    <script src="js/script.js" defer></script>
+    <script type="module" src="js/script.js" defer></script>
   </head>
 
   <body>
@@ -33,7 +32,7 @@
 
       <div class="panel" data-panel-num="2" id="test-panel">
         <div class="content-container flow">
-          <div id="character"></div>
+          <div id="charBox"></div>
 
           <p>Do you know this character?</p>
 
@@ -56,6 +55,5 @@
         </div>
       </div>
     </main>
-
   </body>
 </html>

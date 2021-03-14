@@ -1,4 +1,4 @@
-const simplifiedCharList = [
+export const simplifiedCharList = [
   '的',
   '一',
   '是',
@@ -9904,7 +9904,7 @@ const simplifiedCharList = [
   '鴒',
 ];
 
-const traditionalCharList = [
+export const traditionalCharList = [
   '的',
   '一',
   '是',
