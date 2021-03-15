@@ -17,20 +17,19 @@ let test;
 function startNewTest() {
   test = new Test($tradSimpToggle.checked);
   page.showPanel(2);
-  page.showCharacter(test.nextChar);
+  page.showCharacter(test.newQuestion());
   page.showEstimate('...');
 }
 
 function askQuestion() {
-  test.setTestCharFreq();
-  page.showCharacter(test.nextChar);
+  page.showCharacter(test.newQuestion());
   page.showEstimate(Math.round(test.currentEstimate));
 }
 
-function displayTestResults(result) {
+function displayTestResults() {
   page.showPanel(3);
-  page.showResultText(result.charsKnown);
-  page.showResultChart(test.charList.length, result.charsKnown);
+  page.showResultText(test.result.charsKnown);
+  page.showResultChart(test.charList.length, test.result.charsKnown);
 }
 
 const page = {
@@ -54,26 +53,30 @@ const page = {
 
 $beginTestBtn.addEventListener('click', function () {
   startNewTest();
+  test.logState();
 });
 
 $repeatTestBtn.addEventListener('click', function () {
   startNewTest();
+  test.logState();
 });
 
 $yesBtn.addEventListener('click', function () {
   test.processAnswer(true);
-  if (test.result != null) {
-    displayTestResults(test.result);
+  if (test.result) {
+    displayTestResults();
   } else {
     askQuestion();
   }
+  test.logState();
 });
 
 $noBtn.addEventListener('click', function () {
   test.processAnswer(false);
-  if (test.result != null) {
-    displayTestResults(test.result);
+  if (test.result) {
+    displayTestResults();
   } else {
     askQuestion();
   }
+  test.logState();
 });
