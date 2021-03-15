@@ -1,22 +1,27 @@
 import Answer from './Answer.js';
 import Result from './Result.js';
-import { page } from '../script.js';
 import randomInt from '../functions/randomInt.js';
 import getEloRatingChange from '../functions/getEloRatingChange.js';
 import standardDeviation from '../functions/standardDeviation.js';
 import clamp from '../functions/clamp.js';
 import findClosestUnseenIndex from '../functions/findClosestUnseenIndex.js';
-import { simplifiedCharList, traditionalCharList } from '../../data/charLists.js';
+import { simplifiedCharList, traditionalCharList } from '../data/charLists.js';
 
 export default class Test {
   constructor(useTraditionalChars) {
+    this.charList = useTraditionalChars ? traditionalCharList : simplifiedCharList;
     this.answers = [];
     this.estimates = [0];
     this.placementFreqs = [randomInt(25, 75), randomInt(100, 200), randomInt(300, 600), randomInt(1000, 1700), randomInt(1750, 2500)];
     this.testCharFreq = this.placementFreqs[0];
-    this.isPlacement = true;
-    this.charList = useTraditionalChars ? traditionalCharList : simplifiedCharList;
     this.result = null;
+  }
+  get isPlacement() {
+    if (this.unknownCount > 1 || this.knownCount * 2 - this.unknownCount > 4 || this.unknownCount > this.knownCount) {
+      return false;
+    } else {
+      return true;
+    }
   }
   get knownCount() {
     return this.answers.reduce((count, ans) => (ans.isKnown ? ++count : count), 0);
@@ -36,21 +41,16 @@ export default class Test {
   get currentEstimate() {
     return this.estimates[this.estimates.length - 1];
   }
+  get nextChar() {
+    return this.charList[this.testCharFreq];
+  }
   recentEstimates(numOfEstimates) {
     return this.estimates.slice(-(numOfEstimates + 1), this.estimates.length - 1);
   }
   processAnswer(isKnown) {
     this.answers.push(new Answer(this.testCharFreq, isKnown));
     this.newEstimate(isKnown);
-    this.updatePlacementStatus();
-    this.updateResults();
-    if (this.result != null) {
-      page.showTestResults(this.result);
-    } else {
-      this.setTestCharFreq();
-      page.showCharacter(this.testCharFreq);
-      page.showLiveEstimate(Math.round(this.currentEstimate));
-    }
+    this.updateResult();
   }
   newEstimate(isKnown) {
     let newEstimate = this.currentEstimate;
@@ -63,18 +63,13 @@ export default class Test {
 
     this.estimates.push(Math.round(Math.max(newEstimate, 0)));
   }
-  updatePlacementStatus() {
-    if (this.unknownCount > 1 || this.knownCount * 2 - this.unknownCount > 4 || this.unknownCount > this.knownCount) {
-      this.isPlacement = false;
-    }
-  }
-  updateResults() {
+  updateResult() {
     // TODO: consider only non-placement estimates here
     if (this.answers.length >= 10) {
-      let lastTenEstimates = this.recentEstimates(10);
-      let recentAverage = lastTenEstimates.reduce((sum, num) => sum + num) / 10;
-      let sd = standardDeviation(lastTenEstimates);
-      let relativeSD = sd / recentAverage;
+      const lastTenEstimates = this.recentEstimates(10);
+      const recentAverage = lastTenEstimates.reduce((sum, num) => sum + num) / 10;
+      const sd = standardDeviation(lastTenEstimates);
+      const relativeSD = sd / recentAverage;
       if ((relativeSD < 0.1 && sd < 150) || sd < 2) {
         this.result = new Result(Math.max(Math.round(recentAverage), this.knownCount), Math.round(sd));
       }

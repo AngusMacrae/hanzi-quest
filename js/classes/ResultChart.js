@@ -1,5 +1,16 @@
+import range from '../functions/range.js';
+import getChanceIsKnown from '../functions/getChanceIsKnown.js';
+
 export default class ResultChart extends Chart {
-  constructor(ctx, chancePointsFiltered, charsKnown) {
+  constructor(ctx, charListLength, charsKnown) {
+    const sampleFreqValues = range(0, charListLength, 100);
+    const chances = sampleFreqValues.map(freq => getChanceIsKnown(charsKnown, freq));
+    const chancePoints = chances.map((chance, index) => ({ x: sampleFreqValues[index], y: chance }));
+    const chancePointsFiltered = chancePoints.filter(point => point.y > 0.001);
+    const calculatedScore = chancePointsFiltered.reduce((acc, point) => (acc += point.y), 0);
+    // const chancePointsFiltered = chancePoints.filter(point => point.y > 0.001 && point.y < 0.999);
+    // const labels = [...chancePointsFiltered.map(point => point.x)];
+
     super(ctx, {
       type: 'scatter',
       data: {
